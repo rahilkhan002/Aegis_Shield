@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLOps Fraud Detection - The Cycle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="ambient-glow"></div>
+
+    <header>
+        <div class="logo-container">
+            <span class="glitch-text" data-text="DER ANOMALIE-KREIS">DER ANOMALIE-KREIS</span>
+            <span class="logo-sub">THE FRAUD DETECTION CYCLE</span>
+        </div>
+        <nav>
+            <a href="#playground" class="nav-link active">THE SCANNER</a>
+            <a href="#pipeline" class="nav-link">THE CONNECTION TREE</a>
+            <a href="#telemetry" class="nav-link">LIVE TELEMETRY</a>
+            <a href="/docs" target="_blank" class="nav-link docs-link">API DOCS ↗</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Section 1: The Scanner (Playground) -->
+        <section id="playground" class="tab-content active">
+            <div class="grid-2col">
+                <div class="card terminal-card">
+                    <div class="card-header">
+                        <div class="terminal-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="card-title monospace">CHRONOGRAPH_SCANNER.EXE</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="terminal-intro monospace">ENTER TRANSACTION PARAMETERS TO EVALUATE FOR TIMELINE ANOMALIES.</p>
+                        
+                        <form id="predict-form" class="scanner-form">
+                            <div class="form-group">
+                                <label for="amount" class="monospace">TRANSACTION_AMOUNT (USD)</label>
+                                <div class="input-wrapper">
+                                    <span class="input-prefix">$</span>
+                                    <input type="number" id="amount" name="amount" min="0.01" max="1000000" step="0.01" placeholder="45.99" required>
+                                </div>
+                                <span class="input-hint">Allowed range: $0.01 to $1,000,000.00</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="distance" class="monospace">DISTANCE_FROM_HOME (KM)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="distance" name="distance" min="0" max="20000" step="0.01" placeholder="3.5" required>
+                                    <span class="input-suffix">KM</span>
+                                </div>
+                                <span class="input-hint">Allowed range: 0.0 to 20,000.0 km</span>
+                            </div>
+
+                            <button type="submit" class="btn btn-scan monospace">
+                                <span class="btn-text">INITIALIZE SYSTEM SCAN</span>
+                                <span class="btn-glow"></span>
+                            </button>
+                        </form>
+
+                        <div id="terminal-console" class="terminal-console monospace hidden">
+                            <div class="console-logs"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction Results Pane -->
+                <div class="card result-card">
+                    <div class="card-header">
+                        <span class="card-title monospace">SCAN_EVALUATION_REPORT</span>
+                    </div>
+                    <div class="card-body flex-center flex-column">
+                        <div id="result-placeholder" class="result-placeholder">
+                            <div class="radar-pulse"></div>
+                            <p class="monospace label-muted">AWAITING SCAN INITIALIZATION...</p>
+                        </div>
+
+                        <div id="result-display" class="result-display hidden">
+                            <div class="status-badge" id="badge-container">
+                                <span id="result-status" class="glitch-text" data-text="NORMAL">NORMAL</span>
+                            </div>
+                            
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <span class="metric-label monospace">ANOMALY_SCORE</span>
+                                    <span class="metric-value" id="res-score">-0.0452</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label monospace">LATENCY_MS</span>
+                                    <span class="metric-value" id="res-latency">1.24 ms</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label monospace">MODEL_VERSION</span>
+                                    <span class="metric-value" id="res-version">1.0.0</span>
+                                </div>
+                            </div>
+
+                            <div class="result-message monospace" id="res-desc">
+                                Transaction flows within standard parameters. Timeline secure.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Connection Tree -->
+        <section id="pipeline" class="tab-content">
+            <div class="card tree-card">
+                <div class="card-header">
+                    <span class="card-title monospace">SYSTEM_CONNECTION_TREE</span>
+                </div>
+                <div class="card-body">
+                    <p class="center monospace label-muted">Everything is connected. The past, the present, and the future. Click nodes to inspect pipeline metadata.</p>
+                    
+                    <div class="tree-container">
+                        <!-- SVG for connection lines -->
+                        <svg class="tree-connections" id="tree-svg"></svg>
+
+                        <!-- Pipeline Nodes -->
+                        <div class="node-wrapper" style="top: 15%; left: 15%;" data-node="data">
+                            <div class="node-icon">⚡</div>
+                            <div class="node-label monospace">1. SYNTHETIC DATA</div>
+                        </div>
+
+                        <div class="node-wrapper" style="top: 15%; left: 50%;" data-node="model">
+                            <div class="node-icon">🌲</div>
+                            <div class="node-label monospace">2. ISOLATION FOREST</div>
+                        </div>
+
+                        <div class="node-wrapper" style="top: 15%; left: 85%;" data-node="docker">
+                            <div class="node-icon">📦</div>
+                            <div class="node-label monospace">3. DOCKER BUILD</div>
+                        </div>
+
+                        <div class="node-wrapper" style="top: 70%; left: 15%;" data-node="k8s">
+                            <div class="node-icon">☸️</div>
+                            <div class="node-label monospace">4. KUBERNETES HPA</div>
+                        </div>
+
+                        <div class="node-wrapper" style="top: 70%; left: 50%;" data-node="prometheus">
+                            <div class="node-icon">🔥</div>
+                            <div class="node-label monospace">5. PROMETHEUS</div>
+                        </div>
+
+                        <div class="node-wrapper" style="top: 70%; left: 85%;" data-node="grafana">
+                            <div class="node-icon">📊</div>
+                            <div class="node-label monospace">6. GRAFANA</div>
+                        </div>
+                    </div>
+
+                    <div id="node-inspector" class="card inspector-card hidden">
+                        <div class="card-header">
+                            <span class="monospace" id="inspector-title">NODE DETAILS</span>
+                            <button id="close-inspector" class="monospace">CLOSE</button>
+                        </div>
+                        <div class="card-body monospace" id="inspector-content">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Telemetry Dashboard -->
+        <section id="telemetry" class="tab-content">
+            <div class="grid-3col">
+                <div class="card metric-card">
+                    <div class="card-header">
+                        <span class="card-title monospace">MODEL_LOAD_STATUS</span>
+                    </div>
+                    <div class="card-body flex-center flex-column">
+                        <div class="radial-gauge" id="model-gauge">
+                            <span class="gauge-value monospace" id="gauge-loaded">LOADED</span>
+                        </div>
+                        <div class="status-indicator-group monospace">
+                            <span class="dot-online"></span>
+                            <span>READY FOR INFERENCE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card metric-card">
+                    <div class="card-header">
+                        <span class="card-title monospace">CONTAMINATION_RATE</span>
+                    </div>
+                    <div class="card-body flex-center flex-column">
+                        <div class="radial-gauge-percent">
+                            <span class="gauge-value-percent monospace">4.0%</span>
+                        </div>
+                        <p class="monospace text-center label-muted font-sm">EXPECTED NOMINAL ANOMALY SAMPLES IN DATASET</p>
+                    </div>
+                </div>
+
+                <div class="card metric-card">
+                    <div class="card-header">
+                        <span class="card-title monospace">SYSTEM_UPTIME</span>
+                    </div>
+                    <div class="card-body flex-center flex-column">
+                        <div class="uptime-clock" id="uptime-clock">00:00:00</div>
+                        <p class="monospace text-center label-muted font-sm" id="uptime-label">Uptime since startup</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card chart-card margin-top">
+                <div class="card-header">
+                    <span class="card-title monospace">TELEMETRY_TIMELINE (LIVE SIMULATION)</span>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="live-chart"></canvas>
+                    </div>
+                    <div class="chart-legends monospace font-sm">
+                        <span class="legend-item"><span class="legend-color normal-color"></span> Transactions/min</span>
+                        <span class="legend-item"><span class="legend-color anomaly-color"></span> Anomalies Blocked</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container footer-content monospace">
+            <span>"What we know is a drop. What we don't know is an ocean."</span>
+            <span>MLOps Pipeline v1.0.0 — Google Cloud Deployed</span>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

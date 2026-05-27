@@ -1,0 +1,28 @@
+# =============================================================================
+# mlops-fraud-pipeline — Python dependencies
+# Target: Python 3.10+
+# =============================================================================
+
+# --- Web Framework & ASGI Server -------------------------------------------
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9       # Required for FastAPI form data / file uploads
+
+# --- Data Science & ML -------------------------------------------------------
+scikit-learn==1.4.2
+numpy==1.26.4
+joblib==1.4.2
+
+# --- Observability & Metrics -------------------------------------------------
+prometheus-client==0.20.0     # Exposes /metrics endpoint in Prometheus format
+
+# --- Serialization & Validation ----------------------------------------------
+pydantic==2.7.1               # Request/response schema validation (FastAPI dependency)
+
+# --- Testing -----------------------------------------------------------------
+pytest==8.2.0
+pytest-asyncio==0.23.6
+httpx==0.27.0                 # AsyncClient for FastAPI TestClient
+
+# --- Static Analysis & Security (used in CI) ---------------------------------
+bandit==1.7.8

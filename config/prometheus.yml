@@ -1,0 +1,100 @@
+# =============================================================================
+# prometheus.yml — Prometheus Scrape Configuration
+#
+# This file configures the Prometheus server to scrape metrics from:
+#   1. Itself           (for meta-monitoring)
+#   2. The FastAPI app  (via NodePort on Minikube — static target)
+#
+# Usage (Docker):
+#   docker run -d \
+#     --name prometheus \
+#     -p 9090:9090 \
+#     -v $(pwd)/config/prometheus.yml:/etc/prometheus/prometheus.yml \
+#     prom/prometheus:latest
+#
+# Or via Docker Compose (see the run instructions in the README).
+# =============================================================================
+
+global:
+  # How frequently Prometheus scrapes each target
+  scrape_interval: 15s
+
+  # How long to wait for a scrape to complete before marking it as failed
+  scrape_timeout: 10s
+
+  # How frequently Prometheus evaluates alerting rules
+  evaluation_interval: 15s
+
+  # Labels attached to every time series and alert originating from this
+  # Prometheus instance — useful when federating multiple Prometheus servers.
+  external_labels:
+    monitor: "mlops-fraud-pipeline"
+    environment: "development"
+
+# =============================================================================
+# Scrape Configurations
+# =============================================================================
+
+scrape_configs:
+
+  # ── 1. Prometheus self-monitoring ──────────────────────────────────────────
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "localhost:9090"
+        labels:
+          service: "prometheus"
+
+  # ── 2. Fraud Detection FastAPI Application ─────────────────────────────────
+  # When Prometheus runs as a Docker container on the same Docker network as
+  # the application pod (or when using Minikube NodePort), the target address
+  # must be the Minikube node IP and the NodePort defined in deployment.yaml.
+  #
+  # The Minikube IP is typically 192.168.49.2 when using the Docker driver.
+  # Retrieve it with: minikube ip
+  #
+  # The scrape path is /metrics as defined in app/main.py.
+  - job_name: "fraud-detection-api"
+    metrics_path: "/metrics"
+    scrape_interval: 10s      # More frequent for tighter observability
+    scrape_timeout: 8s
+    static_configs:
+      - targets:
+          # NodePort: <minikube-ip>:<nodePort>
+          # Replace 192.168.49.2 with the output of `minikube ip` if different.
+          - "192.168.49.2:30800"
+        labels:
+          service: "fraud-detection-api"
+          namespace: "mlops"
+          component: "api"
+          version: "1.0.0"
+
+  # ── 3. Local development target (direct Docker run / localhost) ────────────
+  # When running the app locally with `uvicorn app.main:app --port 8000`
+  # (outside Kubernetes), Prometheus can scrape it at localhost:8000.
+  # Disable this job in production by commenting it out.
+  - job_name: "fraud-detection-api-local"
+    metrics_path: "/metrics"
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - "host.docker.internal:8000"   # Resolves to Windows host from inside Docker
+        labels:
+          service: "fraud-detection-api"
+          environment: "local"
+          component: "api"
+
+# =============================================================================
+# Alerting Rules (inline — production deployments should use rule_files)
+# =============================================================================
+# To enable alerting, uncomment the block below and ensure an Alertmanager
+# instance is running on port 9093.
+#
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#             - "localhost:9093"
+#
+# rule_files:
+#   - "alerts.yml"
