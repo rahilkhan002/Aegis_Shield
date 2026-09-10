@@ -134,11 +134,12 @@ async def lifespan(app: FastAPI):
         app_state.risk_engine = get_risk_engine()
         # Ensure legacy artifacts are accessible or trained
         try:
-            app_state.model, app_state.scaler = load_artifacts()
+            from app.model import get_or_train_artifacts
+            app_state.model, app_state.scaler = get_or_train_artifacts()
             MODEL_INFO_GAUGE.set(1)
             logger.info("Artifacts loaded successfully.")
-        except Exception:
-            logger.info("Legacy model.pkl not found on disk; will train baseline if needed.")
+        except Exception as exc:
+            logger.warning("Artifact load warning: %s", exc)
 
         logger.info("Risk Engine and ML Models initialized successfully (v%s).", app_state.model_version)
     except Exception as exc:
@@ -287,25 +288,27 @@ async def favicon():
     tags=["Operations", "Frontend"],
     status_code=status.HTTP_200_OK,
 )
+@app.get("/api", include_in_schema=False)
+@app.get("/api/index.py", include_in_schema=False)
 async def root_or_dashboard(request: Request):
     """Serves the redesigned analyst showcase console for browsers, or JSON health check."""
     if app_state.model is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Model not loaded. Service is not ready.",
-        )
+        try:
+            from app.model import get_or_train_artifacts
+            app_state.model, app_state.scaler = get_or_train_artifacts()
+        except Exception:
+            pass
 
     accept = request.headers.get("accept", "")
-    if "text/html" in accept:
-        index_file = STATIC_DIR / "index.html"
-        if index_file.exists():
-            return FileResponse(str(index_file))
+    index_file = STATIC_DIR / "index.html"
+    if index_file.exists() and ("application/json" not in accept or "text/html" in accept):
+        return FileResponse(str(index_file))
 
     uptime_seconds = round(time.time() - app_state.startup_time, 2)
     return JSONResponse(
         content={
             "status": "healthy",
-            "model_loaded": True,
+            "model_loaded": app_state.model is not None,
             "model_version": app_state.model_version,
             "platform": "Real-Time Intelligent Fraud Detection & MLOps Platform",
             "uptime_seconds": uptime_seconds,

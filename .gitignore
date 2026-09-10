@@ -17,9 +17,7 @@ build/
 venv/
 env/
 
-# Model artifacts (generated at build time — not tracked in VCS)
-model.pkl
-scaler.pkl
+# Heavy or generated artifacts
 supervised_model.pkl
 
 # Database & Runtime

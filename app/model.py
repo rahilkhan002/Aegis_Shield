@@ -208,6 +208,21 @@ def load_artifacts() -> tuple[IsolationForest, StandardScaler]:
     return model, scaler
 
 
+def get_or_train_artifacts() -> tuple[IsolationForest, StandardScaler]:
+    """Load serialized model/scaler, or train baseline on the fly if artifacts are missing."""
+    try:
+        return load_artifacts()
+    except Exception as exc:
+        logger.warning("Artifacts missing or failed to load (%s). Training baseline on the fly...", exc)
+        data = generate_synthetic_training_data(n_samples=2000, random_state=RANDOM_STATE)
+        model, scaler = train_model(data)
+        try:
+            save_artifacts(model, scaler)
+        except Exception:
+            pass
+        return model, scaler
+
+
 # ---------------------------------------------------------------------------
 # CLI entrypoint
 # ---------------------------------------------------------------------------

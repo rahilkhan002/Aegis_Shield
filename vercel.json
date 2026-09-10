@@ -1,13 +1,19 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/api/index.py"
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "api/index.py"
     }
   ],
   "env": {
     "VERCEL": "1",
-    "MODEL_VERSION": "2.0.0",
-    "VERCEL_SUPPORT_LARGE_FUNCTIONS": "1"
+    "MODEL_VERSION": "2.0.0"
   }
 }
