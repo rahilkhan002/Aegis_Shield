@@ -396,6 +396,27 @@ body {
   padding-left: 2rem !important;
 }
 
+.select-currency {
+  width: auto !important;
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: var(--accent-cyan) !important;
+  border: 1px solid rgba(0, 240, 255, 0.35) !important;
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem !important;
+  font-size: 0.72rem !important;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.select-currency:hover,
+.select-currency:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3) !important;
+}
+
 input[type="text"],
 input[type="number"],
 select {

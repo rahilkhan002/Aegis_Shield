@@ -111,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('chk-new-device').checked = !!p.is_new_device;
     document.getElementById('chk-vpn').checked = !!p.is_vpn_proxy;
     document.getElementById('chk-new-beneficiary').checked = !!p.is_new_beneficiary;
+    if (p.currency && inpCurrency) {
+      inpCurrency.value = p.currency;
+      currencySymbol.innerText = CURRENCY_SYMBOLS[p.currency] || p.currency;
+    }
 
     showToast(`Loaded scenario: ${chipName(pId)}`, 'success');
 
@@ -123,11 +127,40 @@ document.addEventListener('DOMContentLoaded', () => {
     return el ? el.innerText : id;
   }
 
+  // Currency Switcher
+  const inpCurrency = document.getElementById('inp-currency');
+  const currencySymbol = document.getElementById('currency-symbol');
+  const CURRENCY_SYMBOLS = {
+    'INR': '₹',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'AED': 'د.إ'
+  };
+
+  if (inpCurrency && currencySymbol) {
+    inpCurrency.addEventListener('change', () => {
+      const cur = inpCurrency.value;
+      currencySymbol.innerText = CURRENCY_SYMBOLS[cur] || cur;
+      showToast(`Currency switched to ${cur} (${currencySymbol.innerText})`, 'info');
+    });
+  }
+
   btnReset.addEventListener('click', () => {
     evalForm.reset();
-    document.getElementById('inp-amount').value = '4800.00';
-    document.getElementById('inp-dist').value = '1350.0';
-    document.getElementById('inp-customer-avg').value = '650.0';
+    document.getElementById('inp-amount').value = '0.00';
+    document.getElementById('inp-dist').value = '0.0';
+    document.getElementById('inp-customer-avg').value = '0.0';
+    document.getElementById('inp-velocity-1h').value = '0';
+    document.getElementById('inp-failed-24h').value = '0';
+    document.getElementById('chk-new-device').checked = false;
+    document.getElementById('chk-vpn').checked = false;
+    document.getElementById('chk-new-beneficiary').checked = false;
+    if (inpCurrency) {
+      inpCurrency.value = 'INR';
+      currencySymbol.innerText = '₹';
+    }
+    showToast('Evaluator bench reset to 0', 'info');
   });
 
   // -------------------------------------------------------------------------
@@ -136,15 +169,23 @@ document.addEventListener('DOMContentLoaded', () => {
   evalForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const amt = parseFloat(document.getElementById('inp-amount').value) || 0.0;
+    if (amt <= 0) {
+      showToast('Please enter an amount greater than 0 to evaluate.', 'warning');
+      document.getElementById('inp-amount').focus();
+      return;
+    }
+
     const payload = {
-      amount: parseFloat(document.getElementById('inp-amount').value),
-      distance_from_home: parseFloat(document.getElementById('inp-dist').value),
+      amount: amt,
+      currency: inpCurrency ? inpCurrency.value : 'INR',
+      distance_from_home: parseFloat(document.getElementById('inp-dist').value) || 0.0,
       transaction_type: document.getElementById('inp-txn-type').value,
       payment_method: document.getElementById('inp-pay-method').value,
       merchant_category: document.getElementById('inp-merch-cat').value,
-      customer_avg_amount_30d: parseFloat(document.getElementById('inp-customer-avg').value),
-      customer_txn_count_last_1h: parseInt(document.getElementById('inp-velocity-1h').value, 10),
-      failed_attempts_last_24h: parseInt(document.getElementById('inp-failed-24h').value, 10),
+      customer_avg_amount_30d: parseFloat(document.getElementById('inp-customer-avg').value) || 0.0,
+      customer_txn_count_last_1h: parseInt(document.getElementById('inp-velocity-1h').value, 10) || 0,
+      failed_attempts_last_24h: parseInt(document.getElementById('inp-failed-24h').value, 10) || 0,
       is_new_device: document.getElementById('chk-new-device').checked,
       is_vpn_proxy: document.getElementById('chk-vpn').checked,
       is_new_beneficiary: document.getElementById('chk-new-beneficiary').checked,

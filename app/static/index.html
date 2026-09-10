@@ -111,15 +111,24 @@
           <form id="form-evaluate" class="eval-form">
             <div class="form-row">
               <div class="form-group">
-                <label for="inp-amount">Amount (INR / USD) *</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                  <label for="inp-amount" style="margin-bottom: 0;">Amount *</label>
+                  <select id="inp-currency" class="select-currency" aria-label="Select Currency">
+                    <option value="INR" selected>INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="AED">AED (د.إ)</option>
+                  </select>
+                </div>
                 <div class="input-with-icon">
-                  <span class="inp-currency">₹</span>
-                  <input type="number" id="inp-amount" step="0.01" min="0.01" max="1000000" value="4800.00" required />
+                  <span class="inp-currency" id="currency-symbol">₹</span>
+                  <input type="number" id="inp-amount" step="0.01" min="0.01" max="1000000" value="0.00" placeholder="0.00" required />
                 </div>
               </div>
               <div class="form-group">
                 <label for="inp-dist">Distance from Home (km) *</label>
-                <input type="number" id="inp-dist" step="0.1" min="0" max="20000" value="1350.0" required />
+                <input type="number" id="inp-dist" step="0.1" min="0" max="20000" value="0.0" placeholder="0.0" required />
               </div>
             </div>
 
@@ -161,7 +170,7 @@
               </div>
               <div class="form-group">
                 <label for="inp-customer-avg">Customer 30-Day Avg Baseline</label>
-                <input type="number" id="inp-customer-avg" step="10" min="10" value="650.0" />
+                <input type="number" id="inp-customer-avg" step="10" min="0" value="0.0" placeholder="0.0" />
               </div>
             </div>
 
@@ -170,11 +179,11 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="inp-velocity-1h">Txns in Last 1 Hour</label>
-                <input type="number" id="inp-velocity-1h" min="0" max="100" value="2" />
+                <input type="number" id="inp-velocity-1h" min="0" max="100" value="0" placeholder="0" />
               </div>
               <div class="form-group">
                 <label for="inp-failed-24h">Failed Attempts in Last 24h</label>
-                <input type="number" id="inp-failed-24h" min="0" max="20" value="0" />
+                <input type="number" id="inp-failed-24h" min="0" max="20" value="0" placeholder="0" />
               </div>
             </div>
 
