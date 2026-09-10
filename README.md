@@ -1,5 +1,6 @@
 # AegisShield: Real-Time Intelligent Financial Fraud Detection & MLOps Platform
 
+[![Live Demo](https://img.shields.io/badge/Vercel-Live%20Console%20Active-000000?logo=vercel)](https://aegis-shield-hazel.vercel.app/)
 [![CI/CD Pipeline](https://img.shields.io/badge/Jenkins-CI%2FCD%20Automated-blue?logo=jenkins)](./Jenkinsfile)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](./requirements.txt)
 [![FastAPI](https://img.shields.io/badge/FastAPI-v2.0.0-009688?logo=fastapi)](./app/main.py)
@@ -8,6 +9,9 @@
 [![Terraform](https://img.shields.io/badge/Terraform-Infrastructure-7B42BC?logo=terraform)](./terraform/)
 [![Bandit Security](https://img.shields.io/badge/Security-Bandit%20SAST%20Passed-brightgreen)](./app/)
 [![Pytest Coverage](https://img.shields.io/badge/Pytest-50%2B%20Tests%20Passing-brightgreen)](./tests/)
+
+> 🌐 **Live Interactive Production Platform**: [https://aegis-shield-hazel.vercel.app/](https://aegis-shield-hazel.vercel.app/)  
+> 📦 **Official Repository**: [https://github.com/rahilkhan002/Aegis_Shield](https://github.com/rahilkhan002/Aegis_Shield)
 
 An enterprise-grade, end-to-end intelligent financial fraud detection platform combining declarative business heuristics, unsupervised anomaly detection (`IsolationForest`), supervised gradient boosted decision trees (`XGBoost`), behavioral velocity counters, and explainable AI (XAI) into a unified **0–100 Risk Scoring Engine**.
 
