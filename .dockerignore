@@ -1,0 +1,36 @@
+# Build context exclusions for Docker
+# Keeps the image build context small and avoids baking secrets into the image.
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+.venv/
+venv/
+
+# Test outputs and CI reports
+pytest-report.xml
+bandit-report.json
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Pre-existing model artifacts (rebuilt inside the Docker builder stage)
+model.pkl
+scaler.pkl
+
+# Development tooling
+.vscode/
+.idea/
+.git/
+.gitignore
+.dockerignore
+
+# Documentation
+README.md
+*.md
+
+# OS artefacts
+.DS_Store
+Thumbs.db

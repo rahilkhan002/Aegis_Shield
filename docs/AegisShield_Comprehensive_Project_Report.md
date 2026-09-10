@@ -333,8 +333,6 @@ c:\College\Projects\Anti Gravity\DevOps\mlops-fraud-pipeline\
 │
 ├── docs/
 │   ├── AegisShield_Comprehensive_Project_Report.md  # Complete technical report (this document)
-│   ├── MLOps_Fraud_Detection_Pipeline_Synopsis.md   # Academic project synopsis
-│   ├── MLOps_Fraud_Pipeline_Overview_v2.pptx         # Executive presentation deck
 │   └── MODEL_BENCHMARK.md                           # Empirical benchmark report across all 5 models
 │
 ├── terraform/

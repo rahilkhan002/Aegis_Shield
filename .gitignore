@@ -45,7 +45,7 @@ Thumbs.db
 desktop.ini
 
 # Docker
-.dockerignore
+# (allow .dockerignore to be tracked)
 
 # Kubernetes
 *.kubeconfig
