@@ -4,7 +4,7 @@
 #
 # Strategy: Multi-stage build
 #   Stage 1 (builder): Install all dependencies into an isolated virtual env
-#                      and pre-train the model artifact.
+#                      and pre-train the model artifacts.
 #   Stage 2 (runtime): Minimal, non-root production image — copies only the
 #                      venv and artifacts from the builder stage.
 #
@@ -23,8 +23,8 @@ FROM python:3.10-slim AS builder
 
 # Metadata labels (OCI standard)
 LABEL org.opencontainers.image.title="fraud-detection-api"
-LABEL org.opencontainers.image.description="MLOps Isolation Forest anomaly detection microservice"
-LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.description="MLOps Intelligent Fraud Detection & Anomaly platform"
+LABEL org.opencontainers.image.version="2.0.0"
 
 # Prevent Python from writing .pyc files and enable unbuffered stdout/stderr
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -36,24 +36,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /build
 
 # Copy only the dependency manifest first to exploit Docker layer caching.
-# The expensive pip install step is only re-run when requirements.txt changes.
 COPY requirements.txt .
 
 # Create a dedicated virtual environment and install all dependencies into it.
-# Using a venv makes it trivial to copy the entire dependency tree to the
-# runtime stage without polluting the system site-packages.
 RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --upgrade pip && \
     /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
-# Copy application source
+# Copy application source and training pipeline
 COPY app/ ./app/
+COPY train_pipeline.py .
 
-# Pre-train the Isolation Forest model and serialize the artifacts (model.pkl
-# and scaler.pkl) into /build so they can be copied to the runtime stage.
-# Setting MODEL_DIR explicitly ensures the artifacts land in a known location.
+# Pre-train both Isolation Forest and Supervised Model artifacts
 ENV MODEL_DIR=/build
-RUN /opt/venv/bin/python -m app.model
+RUN /opt/venv/bin/python -m app.model && \
+    /opt/venv/bin/python train_pipeline.py
 
 
 # ── Stage 2: Runtime ─────────────────────────────────────────────────────────
@@ -64,7 +61,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     # Point the running application at the venv
     PATH="/opt/venv/bin:$PATH" \
     # Allow overriding model version at deploy time (injected by Kubernetes)
-    MODEL_VERSION="1.0.0" \
+    MODEL_VERSION="2.0.0" \
     # Artifact directory — must match MODEL_DIR in model.py
     MODEL_DIR=/app
 
@@ -81,6 +78,7 @@ COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /build/app ./app
 COPY --from=builder /build/model.pkl ./model.pkl
 COPY --from=builder /build/scaler.pkl ./scaler.pkl
+COPY --from=builder /build/supervised_model.pkl ./supervised_model.pkl
 
 # Transfer ownership of the application directory to the non-root user
 RUN chown -R appuser:appgroup /app
@@ -93,7 +91,7 @@ EXPOSE 8000
 
 # Health-check for Docker-native orchestration (Kubernetes uses its own probes)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/')" \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" \
     || exit 1
 
 # Start Uvicorn with:

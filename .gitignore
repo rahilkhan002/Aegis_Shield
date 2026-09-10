@@ -20,6 +20,12 @@ env/
 # Model artifacts (generated at build time — not tracked in VCS)
 model.pkl
 scaler.pkl
+supervised_model.pkl
+
+# Database & Runtime
+*.db
+fraud_pipeline.db
+*.log
 
 # Test output
 pytest-report.xml
@@ -48,3 +54,9 @@ desktop.ini
 
 # Jenkins
 .jenkins/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl

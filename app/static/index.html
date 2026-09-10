@@ -1,239 +1,605 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLOps Fraud Detection - The Cycle</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AegisShield — Intelligent Fraud Detection & MLOps Platform</title>
+  <meta name="description" content="Enterprise-grade real-time financial fraud detection and MLOps monitoring platform combining rule heuristics, Isolation Forest, XGBoost, behavioral velocity, and explainability." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="scanlines"></div>
-    <div class="ambient-glow"></div>
-
-    <header>
-        <div class="logo-container">
-            <span class="glitch-text" data-text="DER ANOMALIE-KREIS">DER ANOMALIE-KREIS</span>
-            <span class="logo-sub">THE FRAUD DETECTION CYCLE</span>
+  <!-- Header / Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
         </div>
-        <nav>
-            <a href="#playground" class="nav-link active">THE SCANNER</a>
-            <a href="#pipeline" class="nav-link">THE CONNECTION TREE</a>
-            <a href="#telemetry" class="nav-link">LIVE TELEMETRY</a>
-            <a href="/docs" target="_blank" class="nav-link docs-link">API DOCS ↗</a>
-        </nav>
-    </header>
-
-    <main class="container">
-        <!-- Section 1: The Scanner (Playground) -->
-        <section id="playground" class="tab-content active">
-            <div class="grid-2col">
-                <div class="card terminal-card">
-                    <div class="card-header">
-                        <div class="terminal-dots">
-                            <span></span><span></span><span></span>
-                        </div>
-                        <span class="card-title monospace">CHRONOGRAPH_SCANNER.EXE</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="terminal-intro monospace">ENTER TRANSACTION PARAMETERS TO EVALUATE FOR TIMELINE ANOMALIES.</p>
-                        
-                        <form id="predict-form" class="scanner-form">
-                            <div class="form-group">
-                                <label for="amount" class="monospace">TRANSACTION_AMOUNT (USD)</label>
-                                <div class="input-wrapper">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="amount" name="amount" min="0.01" max="1000000" step="0.01" placeholder="45.99" required>
-                                </div>
-                                <span class="input-hint">Allowed range: $0.01 to $1,000,000.00</span>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="distance" class="monospace">DISTANCE_FROM_HOME (KM)</label>
-                                <div class="input-wrapper">
-                                    <input type="number" id="distance" name="distance" min="0" max="20000" step="0.01" placeholder="3.5" required>
-                                    <span class="input-suffix">KM</span>
-                                </div>
-                                <span class="input-hint">Allowed range: 0.0 to 20,000.0 km</span>
-                            </div>
-
-                            <button type="submit" class="btn btn-scan monospace">
-                                <span class="btn-text">INITIALIZE SYSTEM SCAN</span>
-                                <span class="btn-glow"></span>
-                            </button>
-                        </form>
-
-                        <div id="terminal-console" class="terminal-console monospace hidden">
-                            <div class="console-logs"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Prediction Results Pane -->
-                <div class="card result-card">
-                    <div class="card-header">
-                        <span class="card-title monospace">SCAN_EVALUATION_REPORT</span>
-                    </div>
-                    <div class="card-body flex-center flex-column">
-                        <div id="result-placeholder" class="result-placeholder">
-                            <div class="radar-pulse"></div>
-                            <p class="monospace label-muted">AWAITING SCAN INITIALIZATION...</p>
-                        </div>
-
-                        <div id="result-display" class="result-display hidden">
-                            <div class="status-badge" id="badge-container">
-                                <span id="result-status" class="glitch-text" data-text="NORMAL">NORMAL</span>
-                            </div>
-                            
-                            <div class="metrics-grid">
-                                <div class="metric-item">
-                                    <span class="metric-label monospace">ANOMALY_SCORE</span>
-                                    <span class="metric-value" id="res-score">-0.0452</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label monospace">LATENCY_MS</span>
-                                    <span class="metric-value" id="res-latency">1.24 ms</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label monospace">MODEL_VERSION</span>
-                                    <span class="metric-value" id="res-version">1.0.0</span>
-                                </div>
-                            </div>
-
-                            <div class="result-message monospace" id="res-desc">
-                                Transaction flows within standard parameters. Timeline secure.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 2: Connection Tree -->
-        <section id="pipeline" class="tab-content">
-            <div class="card tree-card">
-                <div class="card-header">
-                    <span class="card-title monospace">SYSTEM_CONNECTION_TREE</span>
-                </div>
-                <div class="card-body">
-                    <p class="center monospace label-muted">Everything is connected. The past, the present, and the future. Click nodes to inspect pipeline metadata.</p>
-                    
-                    <div class="tree-container">
-                        <!-- SVG for connection lines -->
-                        <svg class="tree-connections" id="tree-svg"></svg>
-
-                        <!-- Pipeline Nodes -->
-                        <div class="node-wrapper" style="top: 15%; left: 15%;" data-node="data">
-                            <div class="node-icon">⚡</div>
-                            <div class="node-label monospace">1. SYNTHETIC DATA</div>
-                        </div>
-
-                        <div class="node-wrapper" style="top: 15%; left: 50%;" data-node="model">
-                            <div class="node-icon">🌲</div>
-                            <div class="node-label monospace">2. ISOLATION FOREST</div>
-                        </div>
-
-                        <div class="node-wrapper" style="top: 15%; left: 85%;" data-node="docker">
-                            <div class="node-icon">📦</div>
-                            <div class="node-label monospace">3. DOCKER BUILD</div>
-                        </div>
-
-                        <div class="node-wrapper" style="top: 70%; left: 15%;" data-node="k8s">
-                            <div class="node-icon">☸️</div>
-                            <div class="node-label monospace">4. KUBERNETES HPA</div>
-                        </div>
-
-                        <div class="node-wrapper" style="top: 70%; left: 50%;" data-node="prometheus">
-                            <div class="node-icon">🔥</div>
-                            <div class="node-label monospace">5. PROMETHEUS</div>
-                        </div>
-
-                        <div class="node-wrapper" style="top: 70%; left: 85%;" data-node="grafana">
-                            <div class="node-icon">📊</div>
-                            <div class="node-label monospace">6. GRAFANA</div>
-                        </div>
-                    </div>
-
-                    <div id="node-inspector" class="card inspector-card hidden">
-                        <div class="card-header">
-                            <span class="monospace" id="inspector-title">NODE DETAILS</span>
-                            <button id="close-inspector" class="monospace">CLOSE</button>
-                        </div>
-                        <div class="card-body monospace" id="inspector-content">
-                            <!-- Injected dynamically -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 3: Telemetry Dashboard -->
-        <section id="telemetry" class="tab-content">
-            <div class="grid-3col">
-                <div class="card metric-card">
-                    <div class="card-header">
-                        <span class="card-title monospace">MODEL_LOAD_STATUS</span>
-                    </div>
-                    <div class="card-body flex-center flex-column">
-                        <div class="radial-gauge" id="model-gauge">
-                            <span class="gauge-value monospace" id="gauge-loaded">LOADED</span>
-                        </div>
-                        <div class="status-indicator-group monospace">
-                            <span class="dot-online"></span>
-                            <span>READY FOR INFERENCE</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card metric-card">
-                    <div class="card-header">
-                        <span class="card-title monospace">CONTAMINATION_RATE</span>
-                    </div>
-                    <div class="card-body flex-center flex-column">
-                        <div class="radial-gauge-percent">
-                            <span class="gauge-value-percent monospace">4.0%</span>
-                        </div>
-                        <p class="monospace text-center label-muted font-sm">EXPECTED NOMINAL ANOMALY SAMPLES IN DATASET</p>
-                    </div>
-                </div>
-
-                <div class="card metric-card">
-                    <div class="card-header">
-                        <span class="card-title monospace">SYSTEM_UPTIME</span>
-                    </div>
-                    <div class="card-body flex-center flex-column">
-                        <div class="uptime-clock" id="uptime-clock">00:00:00</div>
-                        <p class="monospace text-center label-muted font-sm" id="uptime-label">Uptime since startup</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card chart-card margin-top">
-                <div class="card-header">
-                    <span class="card-title monospace">TELEMETRY_TIMELINE (LIVE SIMULATION)</span>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="live-chart"></canvas>
-                    </div>
-                    <div class="chart-legends monospace font-sm">
-                        <span class="legend-item"><span class="legend-color normal-color"></span> Transactions/min</span>
-                        <span class="legend-item"><span class="legend-color anomaly-color"></span> Anomalies Blocked</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container footer-content monospace">
-            <span>"What we know is a drop. What we don't know is an ocean."</span>
-            <span>MLOps Pipeline v1.0.0 — Google Cloud Deployed</span>
+        <div class="brand-text">
+          <h1>AegisShield <span class="badge-pro">ENTERPRISE</span></h1>
+          <p class="subtitle">Intelligent Real-Time Financial Fraud Detection & MLOps Platform</p>
         </div>
-    </footer>
+      </div>
 
-    <script src="/static/app.js"></script>
+      <!-- Live Telemetry Status Pills -->
+      <div class="header-status">
+        <div class="status-pill status-online" id="status-api">
+          <span class="status-dot"></span>
+          <span class="status-label">API: <strong id="lbl-api-status">ACTIVE</strong></span>
+        </div>
+        <div class="status-pill" id="status-model">
+          <span class="status-dot dot-cyan"></span>
+          <span class="status-label">Model: <strong id="lbl-model-ver">v2.0.0</strong></span>
+        </div>
+        <div class="status-pill" id="status-db">
+          <span class="status-dot dot-purple"></span>
+          <span class="status-label">DB: <strong id="lbl-db-status">CONNECTED</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" aria-label="Main Navigation">
+      <button class="nav-tab active" data-tab="tab-evaluator" id="btn-tab-eval">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        Live Evaluator & Scenarios
+      </button>
+      <button class="nav-tab" data-tab="tab-alerts" id="btn-tab-alerts">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        Analyst Triage & Alerts
+        <span class="tab-badge" id="badge-alerts-count">0</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-benchmarks" id="btn-tab-bench">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        Model Benchmarks & Drift
+      </button>
+      <button class="nav-tab" data-tab="tab-rules" id="btn-tab-rules">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        Rule Engine & Weights
+      </button>
+      <button class="nav-tab" data-tab="tab-telemetry" id="btn-tab-telem">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        Metrics & Architecture
+      </button>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+
+    <!-- ================================================================= -->
+    <!-- TAB 1: LIVE EVALUATOR & SCENARIOS -->
+    <!-- ================================================================= -->
+    <section id="tab-evaluator" class="tab-panel active">
+      
+      <!-- Preset Scenarios Selector Bar -->
+      <div class="panel-section presets-container">
+        <div class="presets-header">
+          <span class="presets-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+            Quick Test Fraud Scenarios:
+          </span>
+          <span class="presets-hint">Click a scenario below to instantly prefill and evaluate:</span>
+        </div>
+        <div class="preset-chips" id="presets-chips-list">
+          <button class="chip" data-preset="legit_coffee">☕ Normal Coffee (₹280)</button>
+          <button class="chip chip-danger" data-preset="impossible_travel">✈️ Impossible Travel (7,400 km/h)</button>
+          <button class="chip chip-danger" data-preset="ato_cashout">👤 ATO & Immediate Cash-Out</button>
+          <button class="chip chip-warning" data-preset="card_testing">💳 Card Testing Velocity Burst</button>
+          <button class="chip chip-warning" data-preset="night_mule">🌙 Nighttime Mule Transfer</button>
+        </div>
+      </div>
+
+      <div class="evaluator-grid">
+        
+        <!-- Input Form Column -->
+        <div class="glass-card form-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+              Transaction Evaluator Bench
+            </div>
+            <button type="button" class="btn-text" id="btn-reset-form">Reset</button>
+          </div>
+
+          <form id="form-evaluate" class="eval-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inp-amount">Amount (INR / USD) *</label>
+                <div class="input-with-icon">
+                  <span class="inp-currency">₹</span>
+                  <input type="number" id="inp-amount" step="0.01" min="0.01" max="1000000" value="4800.00" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="inp-dist">Distance from Home (km) *</label>
+                <input type="number" id="inp-dist" step="0.1" min="0" max="20000" value="1350.0" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inp-txn-type">Transaction Type</label>
+                <select id="inp-txn-type">
+                  <option value="PURCHASE" selected>PURCHASE</option>
+                  <option value="TRANSFER">TRANSFER (P2P / Interbank)</option>
+                  <option value="CASH_OUT">CASH_OUT (Atm / Immediate)</option>
+                  <option value="PAYMENT">BILL_PAYMENT</option>
+                  <option value="WITHDRAWAL">WITHDRAWAL</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="inp-pay-method">Payment Method</label>
+                <select id="inp-pay-method">
+                  <option value="UPI" selected>UPI (Instant Real-time)</option>
+                  <option value="CREDIT_CARD">CREDIT_CARD</option>
+                  <option value="DEBIT_CARD">DEBIT_CARD</option>
+                  <option value="NET_BANKING">NET_BANKING</option>
+                  <option value="WALLET">WALLET</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inp-merch-cat">Merchant Category</label>
+                <select id="inp-merch-cat">
+                  <option value="ONLINE_RETAIL" selected>Online E-Commerce</option>
+                  <option value="FOOD_DINING">Food & Restaurants</option>
+                  <option value="GROCERY">Supermarket / Grocery</option>
+                  <option value="FINANCIAL_SERVICES">Financial Services</option>
+                  <option value="CRYPTO_EXCHANGE">Cryptocurrency Exchange (High Risk)</option>
+                  <option value="GAMING_GAMBLING">Online Gaming / Gambling</option>
+                  <option value="LUXURY_JEWELRY">Luxury Jewelry</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="inp-customer-avg">Customer 30-Day Avg Baseline</label>
+                <input type="number" id="inp-customer-avg" step="10" min="10" value="650.0" />
+              </div>
+            </div>
+
+            <div class="form-section-title">Contextual Risk & Behavioral Indicators</div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inp-velocity-1h">Txns in Last 1 Hour</label>
+                <input type="number" id="inp-velocity-1h" min="0" max="100" value="2" />
+              </div>
+              <div class="form-group">
+                <label for="inp-failed-24h">Failed Attempts in Last 24h</label>
+                <input type="number" id="inp-failed-24h" min="0" max="20" value="0" />
+              </div>
+            </div>
+
+            <div class="form-checkboxes">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-new-device" />
+                <span class="checkmark"></span>
+                <span class="chk-label">New / Unrecognized Device</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-vpn" />
+                <span class="checkmark"></span>
+                <span class="chk-label">VPN / Proxy Exit IP</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-new-beneficiary" />
+                <span class="checkmark"></span>
+                <span class="chk-label">New Beneficiary Account</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn-primary" id="btn-submit-eval">
+              <span class="btn-spinner" id="eval-spinner"></span>
+              <span class="btn-text-content">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                Evaluate Risk Score
+              </span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Real-Time Evaluation Result Column -->
+        <div class="glass-card result-card" id="card-result-container">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              Multi-Engine Evaluation Verdict
+            </div>
+            <span class="txn-id-pill" id="res-txn-id">TXN_ID: PENDING</span>
+          </div>
+
+          <div class="verdict-banner" id="verdict-banner">
+            <div class="decision-badge badge-allow" id="badge-decision">
+              <span class="decision-icon" id="decision-icon">✓</span>
+              <span class="decision-text" id="decision-text">ALLOW</span>
+            </div>
+            <div class="verdict-meta">
+              <div class="meta-item">Risk Tier: <strong id="res-risk-tier">LOW</strong></div>
+              <div class="meta-item">Latency: <strong id="res-latency">-- ms</strong></div>
+              <div class="meta-item">Model: <strong id="res-model-ver">v2.0.0</strong></div>
+            </div>
+          </div>
+
+          <!-- Radial Risk Score Meter -->
+          <div class="gauge-section">
+            <div class="gauge-container">
+              <svg class="radial-gauge" viewBox="0 0 160 160">
+                <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+                <circle class="gauge-progress" id="gauge-bar" cx="80" cy="80" r="70" style="stroke-dashoffset: 440;"></circle>
+              </svg>
+              <div class="gauge-value-display">
+                <span class="gauge-number" id="res-score-number">0.0</span>
+                <span class="gauge-max">/ 100</span>
+                <span class="gauge-label">RISK SCORE</span>
+              </div>
+            </div>
+
+            <!-- Ensemble Factor Breakdown Mini-Cards -->
+            <div class="factor-breakdown-grid">
+              <div class="factor-mini-card">
+                <span class="factor-title">Rule Engine</span>
+                <span class="factor-value" id="val-rule-score">0.0</span>
+                <div class="mini-bar"><div class="mini-fill" id="bar-rule" style="width: 0%"></div></div>
+              </div>
+              <div class="factor-mini-card">
+                <span class="factor-title">Supervised ML</span>
+                <span class="factor-value" id="val-ml-prob">0.0%</span>
+                <div class="mini-bar"><div class="mini-fill fill-cyan" id="bar-ml" style="width: 0%"></div></div>
+              </div>
+              <div class="factor-mini-card">
+                <span class="factor-title">Isolation Forest</span>
+                <span class="factor-value" id="val-iso-score">0.00</span>
+                <div class="mini-bar"><div class="mini-fill fill-purple" id="bar-iso" style="width: 0%"></div></div>
+              </div>
+              <div class="factor-mini-card">
+                <span class="factor-title">Behavioral Score</span>
+                <span class="factor-value" id="val-beh-score">0.0</span>
+                <div class="mini-bar"><div class="mini-fill fill-amber" id="bar-beh" style="width: 0%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Explainable Risk Reasons Card -->
+          <div class="reasons-section">
+            <div class="section-subtitle">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Key Explainability Factors & Risk Reasons
+            </div>
+            <ul class="reasons-list" id="reasons-list">
+              <li class="reason-item normal">Perform an evaluation to inspect explainable factors.</li>
+            </ul>
+          </div>
+
+          <!-- Feature Contribution Distribution -->
+          <div class="contributions-section" id="contributions-section">
+            <div class="section-subtitle">Feature Risk Contributions</div>
+            <div class="contrib-bars" id="contrib-bars-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Quick Feedback Action -->
+          <div class="analyst-quick-actions" id="analyst-quick-actions">
+            <button class="btn-action btn-confirm-fraud" id="btn-quick-fraud">
+              🚨 Confirm Fraud
+            </button>
+            <button class="btn-action btn-mark-legit" id="btn-quick-legit">
+              ✓ Mark Legitimate
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- TAB 2: ANALYST TRIAGE & ALERTS -->
+    <!-- ================================================================= -->
+    <section id="tab-alerts" class="tab-panel">
+      <div class="glass-card full-width">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            Live High-Risk Fraud Alerts & Analyst Queue
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" id="btn-refresh-alerts">
+              <svg class="icon-refresh" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span id="lbl-refresh-alerts-text">Refresh Alerts</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="table-alerts">
+            <thead>
+              <tr>
+                <th>Alert ID</th>
+                <th>Transaction ID</th>
+                <th>Timestamp</th>
+                <th>Risk Score</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Triggered Reasons</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-alerts">
+              <tr>
+                <td colspan="8" class="text-center">Loading live alerts...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Transactions Stream Table -->
+      <div class="glass-card full-width" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            Recent Evaluated Transactions Feed
+          </div>
+          <button class="btn-secondary" id="btn-refresh-recent">
+            <svg class="icon-refresh" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span id="lbl-refresh-recent-text">Refresh Feed</span>
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="table-recent">
+            <thead>
+              <tr>
+                <th>Txn ID</th>
+                <th>Time</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Score</th>
+                <th>Decision</th>
+                <th>Latency</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-recent">
+              <tr>
+                <td colspan="8" class="text-center">Loading transactions...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- TAB 3: MODEL BENCHMARKS & DRIFT -->
+    <!-- ================================================================= -->
+    <section id="tab-benchmarks" class="tab-panel">
+      <div class="benchmarks-grid">
+        
+        <!-- Multi-Model Comparison Table Card -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              Multi-Model Evaluation & Benchmark Comparison
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="table-benchmarks">
+              <thead>
+                <tr>
+                  <th>Model Candidate</th>
+                  <th>PR-AUC</th>
+                  <th>F1 Score</th>
+                  <th>ROC-AUC</th>
+                  <th>Inference Latency</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-benchmarks">
+                <!-- Populated via API -->
+              </tbody>
+            </table>
+          </div>
+          <p class="table-footnote">* PR-AUC (Precision-Recall AUC) is prioritized over standard ROC-AUC due to extreme class imbalance (~2-3% fraud rate).</p>
+        </div>
+
+        <!-- Drift Monitoring & Feature Importance Card -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+              Feature Distribution Drift & Stability (PSI)
+            </div>
+          </div>
+          
+          <div class="drift-indicator-box">
+            <div class="drift-pill-status">
+              <span class="status-dot dot-emerald"></span>
+              <span>Population Stability Index (PSI): <strong id="val-psi-score">0.038</strong></span>
+            </div>
+            <p class="drift-desc">PSI &lt; 0.10 indicates the current production inference distribution is strictly stable with no significant concept drift.</p>
+          </div>
+
+          <div class="section-subtitle" style="margin-top: 1.5rem;">Supervised Model Feature Importances</div>
+          <div class="feature-importance-bars" id="feature-importance-bars">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- TAB 4: RULE ENGINE & WEIGHTS -->
+    <!-- ================================================================= -->
+    <section id="tab-rules" class="tab-panel">
+      <div class="glass-card full-width">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            Declarative Heuristic Rules Matrix (`app/rules.yaml`)
+          </div>
+          <span class="badge-status">12 Active Rules</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rule Identifier</th>
+                <th>Weight</th>
+                <th>Trigger Condition</th>
+                <th>Human Description</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>RULE_IMPOSSIBLE_TRAVEL</code></td>
+                <td><span class="rule-weight-badge">25.0</span></td>
+                <td><code>is_impossible_travel == 1.0</code></td>
+                <td>Impossible travel speed detected between consecutive transactions (&gt;850 km/h)</td>
+                <td><span class="tag-active">ENABLED</span></td>
+              </tr>
+              <tr>
+                <td><code>RULE_NEW_DEVICE_HIGH_AMOUNT</code></td>
+                <td><span class="rule-weight-badge">20.0</span></td>
+                <td><code>is_new_device == 1.0 and amount_to_avg_ratio &gt;= 3.0</code></td>
+                <td>High value transaction from an unrecognized new device</td>
+                <td><span class="tag-active">ENABLED</span></td>
+              </tr>
+              <tr>
+                <td><code>RULE_HIGH_VELOCITY_5M</code></td>
+                <td><span class="rule-weight-badge">20.0</span></td>
+                <td><code>txn_count_5m &gt;= 5.0</code></td>
+                <td>Abnormal transaction velocity (&gt;5 transactions in 5 minutes)</td>
+                <td><span class="tag-active">ENABLED</span></td>
+              </tr>
+              <tr>
+                <td><code>RULE_AMOUNT_ZSCORE_EXCEEDED</code></td>
+                <td><span class="rule-weight-badge">18.0</span></td>
+                <td><code>amount_zscore &gt;= 4.0</code></td>
+                <td>Transaction amount exceeds 4 standard deviations from customer baseline</td>
+                <td><span class="tag-active">ENABLED</span></td>
+              </tr>
+              <tr>
+                <td><code>RULE_NEW_BENEFICIARY_HIGH_TRANSFER</code></td>
+                <td><span class="rule-weight-badge">20.0</span></td>
+                <td><code>is_new_beneficiary == 1.0 and amount_to_avg_ratio &gt;= 2.5</code></td>
+                <td>Large transfer to an unverified new beneficiary</td>
+                <td><span class="tag-active">ENABLED</span></td>
+              </tr>
+              <tr>
+                <td><code>RULE_RAPID_FAILED_ATTEMPTS</code></td>
+                <td><span class="rule-weight-badge">15.0</span></td>
+                <td><code>failed_attempts_last_24h &gt;= 3.0 and amount &gt;= 2000.0</code></td>
+                <td>Multiple failed authentication attempts followed by high value transaction</td>
+                <td><span class="tag-active">ENABLED</span></td>
+              </tr>
+              <tr>
+                <td><code>RULE_UNUSUAL_NIGHTTIME_ACTIVITY</code></td>
+                <td><span class="rule-weight-badge">12.0</span></td>
+                <td><code>is_nighttime == 1.0 and amount_to_avg_ratio &gt;= 2.0</code></td>
+                <td>High value transaction during suspicious nighttime hours (01:00 - 05:00 AM)</td>
+                <td><span class="tag-active">ENABLED</span></td>
+              </tr>
+              <tr>
+                <td><code>RULE_SUSPICIOUS_DEVICE_SHARING</code></td>
+                <td><span class="rule-weight-badge">18.0</span></td>
+                <td><code>device_associated_accounts &gt;= 3.0</code></td>
+                <td>Device associated with multiple distinct customer accounts (&gt;3 accounts)</td>
+                <td><span class="tag-active">ENABLED</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- TAB 5: METRICS & ARCHITECTURE -->
+    <!-- ================================================================= -->
+    <section id="tab-telemetry" class="tab-panel">
+      <div class="glass-card full-width">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            End-to-End Enterprise Architecture Flow
+          </div>
+          <a href="/metrics" target="_blank" class="btn-secondary">View /metrics Endpoint</a>
+        </div>
+
+        <div class="architecture-flow-diagram">
+          <div class="arch-box">
+            <h4>1. Ingestion Layer</h4>
+            <p>REST API / Streaming</p>
+            <span class="sub-label">FastAPI + Kafka Consumer</span>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box">
+            <h4>2. Feature Engine</h4>
+            <p>36 Leak-Free Features</p>
+            <span class="sub-label">Sliding Window / Redis</span>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box highlight">
+            <h4>3. Multi-Engine Risk</h4>
+            <p>Rules + XGBoost + IsoForest</p>
+            <span class="sub-label">Ensemble Aggregator</span>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box">
+            <h4>4. Decision & XAI</h4>
+            <p>0-100 Score + Reasons</p>
+            <span class="sub-label">ALLOW / STEP-UP / REVIEW / BLOCK</span>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box">
+            <h4>5. Observability & MLOps</h4>
+            <p>Prometheus + Grafana</p>
+            <span class="sub-label">Jenkins Retraining CI/CD</span>
+          </div>
+        </div>
+
+        <div class="metrics-preview-box">
+          <div class="section-subtitle">Live Prometheus Telemetry Feed Sample</div>
+          <pre class="metrics-code" id="metrics-sample">
+# HELP fraud_predictions_total Total transaction predictions by decision.
+# TYPE fraud_predictions_total counter
+fraud_predictions_total{decision="ALLOW"} 142.0
+fraud_predictions_total{decision="STEP_UP"} 18.0
+fraud_predictions_total{decision="MANUAL_REVIEW"} 9.0
+fraud_predictions_total{decision="BLOCK"} 12.0
+# HELP fraud_prediction_latency_seconds End-to-end inference latency in seconds.
+fraud_prediction_latency_seconds_sum 0.285
+          </pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/static/app.js"></script>
 </body>
 </html>

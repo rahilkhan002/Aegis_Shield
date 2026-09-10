@@ -12,6 +12,14 @@ python-multipart==0.0.9       # Required for FastAPI form data / file uploads
 scikit-learn==1.4.2
 numpy==1.26.4
 joblib==1.4.2
+pandas>=2.0.0
+xgboost>=2.0.0
+
+# --- Database & Storage ------------------------------------------------------
+sqlalchemy>=2.0.0
+
+# --- Configuration -----------------------------------------------------------
+pyyaml>=6.0.0
 
 # --- Observability & Metrics -------------------------------------------------
 prometheus-client==0.20.0     # Exposes /metrics endpoint in Prometheus format

@@ -1,0 +1,14 @@
+.git
+.venv
+venv
+env
+tests
+terraform
+docs
+*.db
+supervised_model.pkl
+.pytest_cache
+bandit-report.json
+pytest-report.xml
+MLOps_Fraud_Pipeline_Overview_v2.pptx
+*.log

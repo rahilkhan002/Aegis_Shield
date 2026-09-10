@@ -125,12 +125,12 @@ def train_model(data: np.ndarray) -> tuple[IsolationForest, StandardScaler]:
     tuple[IsolationForest, StandardScaler]
         Trained model and fitted scaler, respectively.
     """
-    logger.info("Fitting StandardScaler …")
+    logger.info("Fitting StandardScaler ...")
     scaler = StandardScaler()
     scaled_data = scaler.fit_transform(data)
 
     logger.info(
-        "Training IsolationForest (n_estimators=%d, contamination=%.2f) …",
+        "Training IsolationForest (n_estimators=%d, contamination=%.2f) ...",
         N_ESTIMATORS,
         CONTAMINATION,
     )
@@ -156,10 +156,10 @@ def save_artifacts(model: IsolationForest, scaler: StandardScaler) -> None:
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
     joblib.dump(model, MODEL_PATH, compress=3)
-    logger.info("Model artifact saved → %s", MODEL_PATH)
+    logger.info("Model artifact saved -> %s", MODEL_PATH)
 
     joblib.dump(scaler, SCALER_PATH, compress=3)
-    logger.info("Scaler artifact saved → %s", SCALER_PATH)
+    logger.info("Scaler artifact saved -> %s", SCALER_PATH)
 
 
 def load_artifacts() -> tuple[IsolationForest, StandardScaler]:
@@ -213,7 +213,7 @@ def load_artifacts() -> tuple[IsolationForest, StandardScaler]:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    logger.info("=== MLOps Fraud Detection — Model Training Script ===")
+    logger.info("=== MLOps Fraud Detection - Model Training Script ===")
     training_data = generate_synthetic_training_data()
     trained_model, fitted_scaler = train_model(training_data)
     save_artifacts(trained_model, fitted_scaler)

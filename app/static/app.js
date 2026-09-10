@@ -1,502 +1,516 @@
-/* app.js */
-/* Interactive functionality for the 'Dark' theme MLOps Fraud Detection Dashboard */
+/**
+ * AegisShield — Intelligent Fraud Detection Platform Front-End Controller
+ */
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Navigation / Tabs
-    const navLinks = document.querySelectorAll(".nav-link");
-    const tabContents = document.querySelectorAll(".tab-content");
+document.addEventListener('DOMContentLoaded', () => {
+  // Global state
+  let currentTxnId = null;
+  let presetsData = {};
 
-    navLinks.forEach(link => {
-        link.addEventListener("click", (e) => {
-            if (link.classList.contains("docs-link")) return; // Follow external link
-            
-            e.preventDefault();
-            const targetTab = link.getAttribute("href").substring(1);
-            
-            navLinks.forEach(l => l.classList.remove("active"));
-            tabContents.forEach(tc => tc.classList.remove("active"));
-            
-            link.classList.add("active");
-            document.getElementById(targetTab).classList.add("active");
+  // DOM Elements
+  const tabs = document.querySelectorAll('.nav-tab');
+  const tabPanels = document.querySelectorAll('.tab-panel');
 
-            // Redraw SVG connections if pipeline tab is clicked
-            if (targetTab === "pipeline") {
-                setTimeout(drawTreeConnections, 100);
-            }
-        });
+  const evalForm = document.getElementById('form-evaluate');
+  const btnReset = document.getElementById('btn-reset-form');
+  const resTxnId = document.getElementById('res-txn-id');
+  const badgeDecision = document.getElementById('badge-decision');
+  const decisionText = document.getElementById('decision-text');
+  const decisionIcon = document.getElementById('decision-icon');
+  const resRiskTier = document.getElementById('res-risk-tier');
+  const resLatency = document.getElementById('res-latency');
+  const resModelVer = document.getElementById('res-model-ver');
+  const resScoreNum = document.getElementById('res-score-number');
+  const gaugeBar = document.getElementById('gauge-bar');
+
+  // Factor breakdown elements
+  const valRuleScore = document.getElementById('val-rule-score');
+  const valMlProb = document.getElementById('val-ml-prob');
+  const valIsoScore = document.getElementById('val-iso-score');
+  const valBehScore = document.getElementById('val-beh-score');
+  const barRule = document.getElementById('bar-rule');
+  const barMl = document.getElementById('bar-ml');
+  const barIso = document.getElementById('bar-iso');
+  const barBeh = document.getElementById('bar-beh');
+
+  const reasonsList = document.getElementById('reasons-list');
+  const contribBars = document.getElementById('contrib-bars-list');
+
+  // Quick actions
+  const btnQuickFraud = document.getElementById('btn-quick-fraud');
+  const btnQuickLegit = document.getElementById('btn-quick-legit');
+
+  // Tables
+  const tbodyAlerts = document.getElementById('tbody-alerts');
+  const tbodyRecent = document.getElementById('tbody-recent');
+  const tbodyBenchmarks = document.getElementById('tbody-benchmarks');
+  const featImportanceBars = document.getElementById('feature-importance-bars');
+  const badgeAlertsCount = document.getElementById('badge-alerts-count');
+
+  // -------------------------------------------------------------------------
+  // 1. Tab Navigation
+  // -------------------------------------------------------------------------
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tabPanels.forEach(p => p.classList.remove('active'));
+
+      tab.classList.add('active');
+      const targetPanel = document.getElementById(tab.dataset.tab);
+      if (targetPanel) {
+        targetPanel.classList.add('active');
+      }
+
+      // Tab specific load actions
+      if (tab.dataset.tab === 'tab-alerts') {
+        loadAlerts();
+        loadRecentTransactions();
+      } else if (tab.dataset.tab === 'tab-benchmarks') {
+        loadBenchmarks();
+      }
     });
+  });
 
-    // Uptime Clock
-    const uptimeClock = document.getElementById("uptime-clock");
-    const startupTime = Date.now();
-
-    function updateUptime() {
-        // We will query the API health status to get the actual server uptime,
-        // but fall back to client-session uptime if offline.
-        let elapsedMs = Date.now() - startupTime;
-        
-        // Format as HH:MM:SS
-        let totalSecs = Math.floor(elapsedMs / 1000);
-        let hours = Math.floor(totalSecs / 3600);
-        let minutes = Math.floor((totalSecs % 3600) / 60);
-        let seconds = totalSecs % 60;
-
-        const pad = (num) => String(num).padStart(2, "0");
-        uptimeClock.textContent = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  // -------------------------------------------------------------------------
+  // 2. Presets Loading & Pre-filling
+  // -------------------------------------------------------------------------
+  async function loadPresets() {
+    try {
+      const res = await fetch('/api/presets');
+      if (res.ok) {
+        const presets = await res.json();
+        presets.forEach(p => {
+          presetsData[p.id] = p.payload;
+        });
+      }
+    } catch (e) {
+      console.warn('Could not load presets from API, using client fallback', e);
     }
+  }
+
+  const presetChips = document.querySelectorAll('.chip[data-preset]');
+  presetChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const pId = chip.dataset.preset;
+      applyPreset(pId);
+    });
+  });
+
+  function applyPreset(pId) {
+    const p = presetsData[pId];
+    if (!p) return;
+
+    document.getElementById('inp-amount').value = p.amount || 100.0;
+    document.getElementById('inp-dist').value = p.distance_from_home || 0.0;
+    document.getElementById('inp-txn-type').value = p.transaction_type || 'PURCHASE';
+    document.getElementById('inp-pay-method').value = p.payment_method || 'UPI';
+    document.getElementById('inp-merch-cat').value = p.merchant_category || 'ONLINE_RETAIL';
+    document.getElementById('inp-customer-avg').value = p.customer_avg_amount_30d || 500.0;
+    document.getElementById('inp-velocity-1h').value = p.customer_txn_count_last_1h || 1;
+    document.getElementById('inp-failed-24h').value = p.failed_attempts_last_24h || 0;
+    document.getElementById('chk-new-device').checked = !!p.is_new_device;
+    document.getElementById('chk-vpn').checked = !!p.is_vpn_proxy;
+    document.getElementById('chk-new-beneficiary').checked = !!p.is_new_beneficiary;
+
+    showToast(`Loaded scenario: ${chipName(pId)}`, 'success');
+
+    // Auto trigger evaluation
+    evalForm.dispatchEvent(new Event('submit'));
+  }
+
+  function chipName(id) {
+    const el = document.querySelector(`.chip[data-preset="${id}"]`);
+    return el ? el.innerText : id;
+  }
+
+  btnReset.addEventListener('click', () => {
+    evalForm.reset();
+    document.getElementById('inp-amount').value = '4800.00';
+    document.getElementById('inp-dist').value = '1350.0';
+    document.getElementById('inp-customer-avg').value = '650.0';
+  });
+
+  // -------------------------------------------------------------------------
+  // 3. Evaluation Form Handler
+  // -------------------------------------------------------------------------
+  evalForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      amount: parseFloat(document.getElementById('inp-amount').value),
+      distance_from_home: parseFloat(document.getElementById('inp-dist').value),
+      transaction_type: document.getElementById('inp-txn-type').value,
+      payment_method: document.getElementById('inp-pay-method').value,
+      merchant_category: document.getElementById('inp-merch-cat').value,
+      customer_avg_amount_30d: parseFloat(document.getElementById('inp-customer-avg').value),
+      customer_txn_count_last_1h: parseInt(document.getElementById('inp-velocity-1h').value, 10),
+      failed_attempts_last_24h: parseInt(document.getElementById('inp-failed-24h').value, 10),
+      is_new_device: document.getElementById('chk-new-device').checked,
+      is_vpn_proxy: document.getElementById('chk-vpn').checked,
+      is_new_beneficiary: document.getElementById('chk-new-beneficiary').checked,
+    };
+
+    const submitBtn = document.getElementById('btn-submit-eval');
+    submitBtn.classList.add('loading');
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Inference error: HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      renderEvaluationResult(data);
+    } catch (err) {
+      showToast(err.message, 'danger');
+    } finally {
+      submitBtn.classList.remove('loading');
+    }
+  });
+
+  function renderEvaluationResult(data) {
+    currentTxnId = data.transaction_id;
+    resTxnId.innerText = `ID: ${data.transaction_id}`;
+
+    const score = data.risk_score;
+    animateGauge(score);
+
+    // Decision badge style & text
+    badgeDecision.className = 'decision-badge';
+    let icon = '✓';
+    let decisionClass = 'badge-allow';
+
+    if (data.decision === 'BLOCK') {
+      decisionClass = 'badge-block';
+      icon = '✕';
+    } else if (data.decision === 'MANUAL_REVIEW') {
+      decisionClass = 'badge-review';
+      icon = '👁';
+    } else if (data.decision === 'STEP_UP') {
+      decisionClass = 'badge-step-up';
+      icon = '🔐';
+    }
+
+    badgeDecision.classList.add(decisionClass);
+    decisionText.innerText = data.decision.replace('_', ' ');
+    decisionIcon.innerText = icon;
+
+    resRiskTier.innerText = data.risk_level;
+    resLatency.innerText = `${data.processing_time_ms} ms`;
+    resModelVer.innerText = `v${data.model_version || '2.0.0'}`;
+
+    // Sub-factors
+    valRuleScore.innerText = `${data.rule_score.toFixed(1)}`;
+    barRule.style.width = `${Math.min(100, data.rule_score)}%`;
+
+    valMlProb.innerText = `${(data.fraud_probability * 100).toFixed(1)}%`;
+    barMl.style.width = `${data.fraud_probability * 100}%`;
+
+    valIsoScore.innerText = `${data.anomaly_score.toFixed(3)}`;
+    barIso.style.width = `${data.anomaly_score * 100}%`;
+
+    valBehScore.innerText = `${(data.behavior_score || 0).toFixed(1)}`;
+    barBeh.style.width = `${Math.min(100, data.behavior_score || 0)}%`;
+
+    // Render Reasons
+    reasonsList.innerHTML = '';
+    if (data.reasons && data.reasons.length > 0) {
+      data.reasons.forEach(r => {
+        const li = document.createElement('li');
+        li.className = 'reason-item';
+        if (data.risk_score >= 80) li.classList.add('danger');
+        else if (data.risk_score >= 60) li.classList.add('warning');
+        else li.classList.add('normal');
+        li.innerText = r;
+        reasonsList.appendChild(li);
+      });
+    } else {
+      const li = document.createElement('li');
+      li.className = 'reason-item normal';
+      li.innerText = 'No abnormal flags triggered. Normal behavioral parameters.';
+      reasonsList.appendChild(li);
+    }
+
+    // Render Feature Contributions
+    contribBars.innerHTML = '';
+    if (data.feature_contributions) {
+      Object.entries(data.feature_contributions).forEach(([name, pct]) => {
+        const row = document.createElement('div');
+        row.className = 'contrib-row';
+        row.innerHTML = `
+          <div class="contrib-header">
+            <span>${name}</span>
+            <span><strong>${pct}%</strong></span>
+          </div>
+          <div class="contrib-bar-wrap">
+            <div class="contrib-bar-fill" style="width: ${pct}%"></div>
+          </div>
+        `;
+        contribBars.appendChild(row);
+      });
+    }
+
+    // Update alert count badge in header
+    if (data.decision === 'BLOCK' || data.decision === 'MANUAL_REVIEW') {
+      const cur = parseInt(badgeAlertsCount.innerText || '0', 10);
+      badgeAlertsCount.innerText = cur + 1;
+    }
+  }
+
+  function animateGauge(targetScore) {
+    // 440 is the perimeter (2 * pi * 70)
+    const maxOffset = 440;
+    const targetOffset = maxOffset - (targetScore / 100) * maxOffset;
+
+    gaugeBar.style.strokeDashoffset = targetOffset;
+
+    // Stroke color based on risk level
+    if (targetScore >= 80) {
+      gaugeBar.style.stroke = '#ef4444'; // Crimson
+    } else if (targetScore >= 60) {
+      gaugeBar.style.stroke = '#f97316'; // Orange
+    } else if (targetScore >= 30) {
+      gaugeBar.style.stroke = '#f59e0b'; // Amber
+    } else {
+      gaugeBar.style.stroke = '#10b981'; // Emerald
+    }
+
+    // Number roll animation
+    let current = 0;
+    const step = targetScore / 25;
+    const timer = setInterval(() => {
+      current += step;
+      if ((step > 0 && current >= targetScore) || (step <= 0 && current <= targetScore)) {
+        current = targetScore;
+        clearInterval(timer);
+      }
+      resScoreNum.innerText = current.toFixed(1);
+    }, 15);
+  }
+
+  // -------------------------------------------------------------------------
+  // 4. Quick Feedback Buttons
+  // -------------------------------------------------------------------------
+  btnQuickFraud.addEventListener('click', async () => {
+    if (!currentTxnId) {
+      showToast('No active transaction evaluated yet.', 'danger');
+      return;
+    }
+    await submitFeedback(currentTxnId, 'CONFIRMED_FRAUD');
+  });
+
+  btnQuickLegit.addEventListener('click', async () => {
+    if (!currentTxnId) {
+      showToast('No active transaction evaluated yet.', 'danger');
+      return;
+    }
+    await submitFeedback(currentTxnId, 'LEGITIMATE');
+  });
+
+  async function submitFeedback(txnId, verdict) {
+    try {
+      const res = await fetch('/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transaction_id: txnId,
+          verdict: verdict,
+          analyst_id: 'ANALYST_DASHBOARD',
+        }),
+      });
+
+      if (res.ok) {
+        showToast(`Saved verdict: ${verdict} for ${txnId}`, 'success');
+        loadAlerts();
+      }
+    } catch (e) {
+      showToast(`Feedback error: ${e.message}`, 'danger');
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // 5. Alerts and Transactions Feed
+  // -------------------------------------------------------------------------
+  document.getElementById('btn-refresh-alerts').addEventListener('click', () => loadAlerts(true));
+  document.getElementById('btn-refresh-recent').addEventListener('click', () => loadRecentTransactions(true));
+
+  async function loadAlerts(isUserClick = false) {
+    const btn = document.getElementById('btn-refresh-alerts');
+    const icon = btn ? btn.querySelector('.icon-refresh') : null;
+    const lbl = document.getElementById('lbl-refresh-alerts-text');
     
-    // Set server startup time if we fetch it
-    let serverUptimeSecs = null;
-    let localUptimeFetchTime = null;
+    if (isUserClick && icon) icon.classList.add('spin');
+    if (isUserClick && lbl) lbl.innerText = 'Refreshing...';
 
-    function getDisplayUptime() {
-        if (serverUptimeSecs !== null && localUptimeFetchTime !== null) {
-            let drift = Math.floor((Date.now() - localUptimeFetchTime) / 1000);
-            let currentServerSecs = serverUptimeSecs + drift;
-            let hours = Math.floor(currentServerSecs / 3600);
-            let minutes = Math.floor((currentServerSecs % 3600) / 60);
-            let seconds = currentServerSecs % 60;
-            const pad = (num) => String(num).padStart(2, "0");
-            uptimeClock.textContent = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-            document.getElementById("uptime-label").textContent = "Actual server uptime (fetched from /)";
-        } else {
-            updateUptime();
-        }
+    try {
+      const res = await fetch(`/fraud/alerts?limit=25&_t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const alerts = await res.json();
+
+      badgeAlertsCount.innerText = alerts.filter(a => a.status === 'OPEN').length;
+
+      if (alerts.length === 0) {
+        tbodyAlerts.innerHTML = `<tr><td colspan="8" class="text-center" style="padding: 2rem; color: var(--text-muted);">No active high-priority fraud alerts.</td></tr>`;
+      } else {
+        tbodyAlerts.innerHTML = alerts.map(a => `
+          <tr class="${isUserClick ? 'table-row-updated' : ''}">
+            <td><code>${a.alert_id}</code></td>
+            <td><code>${a.transaction_id}</code></td>
+            <td>${formatTime(a.created_at)}</td>
+            <td><strong style="color: ${a.risk_score >= 80 ? 'var(--accent-crimson)' : 'var(--accent-amber)'};">${a.risk_score.toFixed(1)}</strong></td>
+            <td><span class="tag-active ${a.risk_level === 'CRITICAL' ? 'tag-danger' : 'tag-warning'}">${a.risk_level}</span></td>
+            <td><strong>${a.status}</strong></td>
+            <td style="max-width: 280px; font-size: 0.75rem; color: var(--text-secondary);">${(a.reasons || []).slice(0, 2).join('; ') || 'Risk threshold exceeded'}</td>
+            <td>
+              <button class="btn-text" onclick="window.confirmFraud('${a.transaction_id}')" style="color: #ef4444; font-weight: 600;">🚨 Fraud</button> |
+              <button class="btn-text" onclick="window.confirmLegit('${a.transaction_id}')" style="color: #10b981; font-weight: 600;">✓ Legit</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      if (isUserClick) {
+        showToast(`Alerts queue refreshed: ${alerts.length} alerts loaded`, 'success');
+      }
+    } catch (e) {
+      console.warn('Could not load alerts', e);
+      if (isUserClick) showToast(`Failed to refresh alerts: ${e.message}`, 'danger');
+    } finally {
+      if (icon) icon.classList.remove('spin');
+      if (lbl) lbl.innerText = 'Refresh Alerts';
     }
-    setInterval(getDisplayUptime, 1000);
+  }
 
-    // Fetch API Health on load
-    fetch("/")
-        .then(res => {
-            if (res.headers.get("content-type")?.includes("application/json")) {
-                return res.json();
-            }
-            throw new Error("HTML response");
-        })
-        .then(data => {
-            if (data && data.status === "healthy") {
-                serverUptimeSecs = Math.round(data.uptime_seconds);
-                localUptimeFetchTime = Date.now();
-                document.getElementById("gauge-loaded").textContent = "ONLINE";
-                document.getElementById("gauge-loaded").style.color = "var(--accent-green)";
-            }
-        })
-        .catch(err => {
-            // Server offline or serving static HTML directly. Use client timer.
-            document.getElementById("gauge-loaded").textContent = "STANDALONE";
-            document.getElementById("gauge-loaded").style.color = "yellow";
-            document.querySelector(".status-indicator-group span").textContent = "RUNNING IN STANDALONE MODE";
-            document.querySelector(".status-indicator-group span").style.color = "yellow";
-            document.querySelector(".dot-online").style.backgroundColor = "yellow";
-            document.querySelector(".dot-online").style.boxShadow = "0 0 8px yellow";
-        });
+  async function loadRecentTransactions(isUserClick = false) {
+    const btn = document.getElementById('btn-refresh-recent');
+    const icon = btn ? btn.querySelector('.icon-refresh') : null;
+    const lbl = document.getElementById('lbl-refresh-recent-text');
 
-    // Scanner / Playground Terminal
-    const form = document.getElementById("predict-form");
-    const terminalConsole = document.getElementById("terminal-console");
-    const consoleLogs = terminalConsole.querySelector(".console-logs");
-    const resultPlaceholder = document.getElementById("result-placeholder");
-    const resultDisplay = document.getElementById("result-display");
+    if (isUserClick && icon) icon.classList.add('spin');
+    if (isUserClick && lbl) lbl.innerText = 'Refreshing...';
 
-    const addLog = (text, type = "muted", delay = 0) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const div = document.createElement("div");
-                div.className = `log-${type}`;
-                div.textContent = `> ${text}`;
-                consoleLogs.appendChild(div);
-                terminalConsole.scrollTop = terminalConsole.scrollHeight;
-                resolve();
-            }, delay);
-        });
-    };
+    try {
+      const res = await fetch(`/transactions/recent?limit=25&_t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const txns = await res.json();
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        
-        const amount = parseFloat(document.getElementById("amount").value);
-        const distance = parseFloat(document.getElementById("distance").value);
+      if (txns.length === 0) {
+        tbodyRecent.innerHTML = `<tr><td colspan="8" class="text-center" style="padding: 2rem; color: var(--text-muted);">No transactions evaluated yet.</td></tr>`;
+      } else {
+        tbodyRecent.innerHTML = txns.map(t => `
+          <tr class="${isUserClick ? 'table-row-updated' : ''}">
+            <td><code>${t.transaction_id}</code></td>
+            <td>${formatTime(t.timestamp)}</td>
+            <td>${t.customer_id}</td>
+            <td><strong>₹${Number(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></td>
+            <td>${t.transaction_type}</td>
+            <td><strong>${t.risk_score.toFixed(1)}</strong></td>
+            <td><span class="tag-active ${t.decision === 'BLOCK' ? 'tag-danger' : (t.decision === 'ALLOW' ? '' : 'tag-warning')}">${t.decision}</span></td>
+            <td>${t.processing_time_ms.toFixed(1)} ms</td>
+          </tr>
+        `).join('');
+      }
 
-        // Hide result, show terminal
-        resultDisplay.classList.add("hidden");
-        resultPlaceholder.classList.remove("hidden");
-        terminalConsole.classList.remove("hidden");
-        consoleLogs.innerHTML = "";
-
-        await addLog("INITIALIZING CHRONOGRAPH SYSTEM SCAN...", "success", 100);
-        await addLog(`COORDINATES INJECTED: USD=${amount.toFixed(2)}, DIST=${distance.toFixed(2)} KM`, "muted", 300);
-        await addLog("ESTABLISHING LINK TO SCALING ENGINES...", "muted", 200);
-        await addLog("APPLYING STANDARDSCALER TRANSFORMATIONS...", "muted", 350);
-        await addLog("ROUTING VECTOR SPACES THROUGH ISOLATION TREES...", "muted", 250);
-        await addLog("CONVERGING 200 ISOLATION ESTIMATORS...", "muted", 300);
-        await addLog("CALCULATING PATH SEGMENT DENSITY SCORE...", "muted", 200);
-
-        let latency = 0;
-        let isAnomaly = false;
-        let score = 0;
-        let version = "1.0.0";
-        let isMock = false;
-
-        const startTime = performance.now();
-
-        try {
-            // Hit real /predict API
-            const response = await fetch("/predict", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify({ amount, distance_from_home: distance })
-            });
-
-            if (!response.ok) {
-                throw new Error("HTTP prediction request failed");
-            }
-
-            const data = await response.json();
-            isAnomaly = data.is_anomaly;
-            score = data.anomaly_score;
-            version = data.model_version;
-            latency = data.processing_time_ms;
-        } catch (err) {
-            // Fallback mock algorithm representing the Isolation Forest model logic
-            isMock = true;
-            latency = parseFloat((performance.now() - startTime).toFixed(3));
-            
-            // Unsupervised logic simulation: Anomalies reside in high amount or long distance tails
-            // contamination was 4%.
-            // normal amount mean=4.5 lognormal (~50-300 USD), distance mean=2.0 (~1-50 km)
-            // anomaly amount uniform(800, 5000), distance uniform(200, 1500)
-            if (amount > 800 || distance > 200 || (amount > 400 && distance > 100)) {
-                isAnomaly = true;
-                // Anomaly score range approx -0.5 to -0.1
-                score = -0.15 - (amount / 10000) - (distance / 5000);
-            } else {
-                isAnomaly = false;
-                // Normal score range approx 0.0 to 0.5
-                score = 0.38 - (amount / 3000) - (distance / 1000);
-            }
-            score = parseFloat(score.toFixed(6));
-        }
-
-        if (isMock) {
-            await addLog("WARNING: DIRECT GATEWAY OFFLINE. USING EMBEDDED ENGINE RUNTIME.", "warn", 200);
-        }
-
-        await addLog(`SCAN COMPLETED IN ${latency} MS. VECTOR CLASS RESOLVED.`, "success", 400);
-
-        // Populate and display result card
-        const badge = document.getElementById("badge-container");
-        const statusText = document.getElementById("result-status");
-        const scoreText = document.getElementById("res-score");
-        const latencyText = document.getElementById("res-latency");
-        const versionText = document.getElementById("res-version");
-        const descText = document.getElementById("res-desc");
-
-        scoreText.textContent = score.toFixed(6);
-        latencyText.textContent = `${latency} ms`;
-        versionText.textContent = isMock ? `${version} (EMULATED)` : version;
-
-        if (isAnomaly) {
-            await addLog("[!!! WARNING: SPATIAL ANOMALY DETECTED !!!]", "error", 200);
-            badge.className = "status-badge anomaly";
-            statusText.textContent = "ANOMALY";
-            statusText.setAttribute("data-text", "ANOMALY");
-            descText.textContent = "CRITICAL: Transaction values lie outside 96% of historical space vectors. High probability of fraudulent source.";
-            descText.style.color = "var(--accent-red)";
-        } else {
-            await addLog("[SIGNAL NORMAL. TIMELINE PATH SECURED.]", "success", 200);
-            badge.className = "status-badge normal";
-            statusText.textContent = "NORMAL";
-            statusText.setAttribute("data-text", "NORMAL");
-            descText.textContent = "Transaction verified within standard statistical intervals. No anomalous signal detected.";
-            descText.style.color = "var(--text-color)";
-        }
-
-        // Hide placeholder and reveal result details
-        resultPlaceholder.classList.add("hidden");
-        resultDisplay.classList.remove("hidden");
-    });
-
-    // MLOps Connection Tree - Render Connections
-    const nodes = document.querySelectorAll(".node-wrapper");
-    const svg = document.getElementById("tree-svg");
-
-    const nodeData = {
-        data: {
-            title: "1. SYNTHETIC DATA GENERATOR",
-            tech: "NumPy Lognormal Distributions",
-            details: "Simulates actual credit card transaction footprints using lognormal and uniform distributions. Defines normal clusters (mean amount=$90, mean distance=7km) alongside a 4% contaminate uniform anomaly tail (amounts up to $5000, distance up to 1500km).",
-            logs: "> Generated 10,000 baseline normal transactions.\n> Injected 400 outlier transactions into tail domains.\n> Feature set compiled: [amount, distance_from_home].\n> Shape dimensions resolved: (10400, 2)."
-        },
-        model: {
-            title: "2. ISOLATION FOREST MODEL",
-            tech: "Scikit-Learn (Unsupervised ML)",
-            details: "An Isolation Forest model fitted with 200 estimators. Translates vectors into isolation trees and isolates observations by partitioning features recursively. Uses a fitted StandardScaler to normalize inputs prior to forest projection.",
-            logs: "> Initializing StandardScaler fitting...\n> StandardScaler mean values calculated.\n> IsolationForest constructed with 200 estimators, contam=0.04.\n> Fitting ensemble model in parallel (n_jobs=-1)...\n> Serialize joblib model.pkl + scaler.pkl artifacts."
-        },
-        docker: {
-            title: "3. DOCKER CONTAINERIZATION",
-            tech: "Secure Multi-stage Dockerfile",
-            details: "Capsules Python runtime environment into a minimal Alpine-compatible base. Stage 1 compiles requirements and serializes ML models. Stage 2 copies clean binary libraries and runs Uvicorn under a restricted UID 1001 user to prevent privilege escalations.",
-            logs: "> Docker container base image pulled: python:3.10-slim\n> Execution user 'appuser' configured.\n> Clean model weights compiled in artifacts build.\n> Container footprint reduced from ~850MB to ~210MB.\n> Container exposed internally on port 8000."
-        },
-        k8s: {
-            title: "4. KUBERNETES MICROSERVICE",
-            tech: "Minikube Pod Cluster & NodePort",
-            details: "Orchestrates API across a container cluster using a rolling update strategy with maxUnavailable=0. Utilizes a Horizontal Pod Autoscaler (HPA) to scale replication pods from 2 to 5 automatically when CPU loads scale past 70%.",
-            logs: "> Kubernetes Namespace 'mlops' declared.\n> Created deployment/fraud-detection-deployment.\n> Service configured with static NodePort on port 30800.\n> Readiness probe configured on path '/' with 15s delay.\n> HPA scaled target matched: CPU threshold=70%."
-        },
-        prometheus: {
-            title: "5. PROMETHEUS TELEMETRY",
-            tech: "Time-series Scrape Daemon",
-            details: "Periodically polls the FastAPI `/metrics` scrape target every 15 seconds. Tracks count metrics (http requests, classifications) and latency histograms (prediction runtimes) to observe live deployment health.",
-            logs: "> Loading prometheus config from config/prometheus.yml\n> Target client connected: http://host.docker.internal:8000/metrics\n> Initialized metric collectors: fraud_api_requests_total\n> Logging scraping rate intervals at 15s."
-        },
-        grafana: {
-            title: "6. GRAFANA DASHBOARDS",
-            tech: "Observability Metrics Visualization",
-            details: "Connects to the Prometheus time-series database to plot operational charts. Monitors the real-time prediction rate, anomalies percentage, p99 API latencies, and active model versions.",
-            logs: "> Connected to Prometheus Data Source.\n> Panel query configured: rate(fraud_predictions_total[1m])\n> Active alert channels initialized.\n> Dashboard panels formatted for real-time operations."
-        }
-    };
-
-    // Draw SVG connections
-    function drawTreeConnections() {
-        if (!svg) return;
-        svg.innerHTML = "";
-        
-        const svgRect = svg.getBoundingClientRect();
-
-        // Connections mapping: (From Node -> To Node)
-        // Data -> Model -> Docker -> K8s -> Prometheus -> Grafana
-        const connections = [
-            { from: "data", to: "model" },
-            { from: "model", to: "docker" },
-            { from: "docker", to: "k8s" },
-            { from: "k8s", to: "prometheus" },
-            { from: "prometheus", to: "grafana" },
-            // Circular reference representing "The Cycle"
-            { from: "grafana", to: "data" }
-        ];
-
-        connections.forEach(conn => {
-            const elFrom = document.querySelector(`[data-node="${conn.from}"]`);
-            const elTo = document.querySelector(`[data-node="${conn.to}"]`);
-            
-            if (elFrom && elTo) {
-                const rectFrom = elFrom.getBoundingClientRect();
-                const rectTo = elTo.getBoundingClientRect();
-
-                // Compute coordinates relative to SVG canvas
-                const x1 = rectFrom.left + rectFrom.width / 2 - svgRect.left;
-                const y1 = rectFrom.top + rectFrom.height / 2 - svgRect.top;
-                
-                const x2 = rectTo.left + rectTo.width / 2 - svgRect.left;
-                const y2 = rectTo.top + rectTo.height / 2 - svgRect.top;
-
-                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                
-                // If nodes are not in a straight line, draw a nice curved bezier path
-                let d = "";
-                if (Math.abs(y1 - y2) > 10 && Math.abs(x1 - x2) > 10) {
-                    const cx1 = x1;
-                    const cy1 = y1 + (y2 - y1) / 2;
-                    const cx2 = x2;
-                    const cy2 = y1 + (y2 - y1) / 2;
-                    d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
-                } else {
-                    d = `M ${x1} ${y1} L ${x2} ${y2}`;
-                }
-
-                path.setAttribute("d", d);
-                path.setAttribute("class", "tree-svg-line");
-                path.setAttribute("id", `line-${conn.from}-${conn.to}`);
-                
-                svg.appendChild(path);
-            }
-        });
+      if (isUserClick) {
+        showToast(`Transaction feed refreshed: ${txns.length} records loaded`, 'success');
+      }
+    } catch (e) {
+      console.warn('Could not load recent txns', e);
+      if (isUserClick) showToast(`Failed to refresh feed: ${e.message}`, 'danger');
+    } finally {
+      if (icon) icon.classList.remove('spin');
+      if (lbl) lbl.innerText = 'Refresh Feed';
     }
+  }
 
-    // Window resize redraw lines
-    window.addEventListener("resize", drawTreeConnections);
+  window.confirmFraud = (id) => submitFeedback(id, 'CONFIRMED_FRAUD');
+  window.confirmLegit = (id) => submitFeedback(id, 'LEGITIMATE');
 
-    // Node click inspector logic
-    const inspector = document.getElementById("node-inspector");
-    const closeInspectorBtn = document.getElementById("close-inspector");
+  // -------------------------------------------------------------------------
+  // 6. Model Benchmarks
+  // -------------------------------------------------------------------------
+  async function loadBenchmarks() {
+    try {
+      const res = await fetch('/model/performance');
+      if (!res.ok) return;
+      const data = await res.json();
 
-    nodes.forEach(node => {
-        node.addEventListener("click", () => {
-            const nodeId = node.getAttribute("data-node");
-            const data = nodeData[nodeId];
+      if (data.benchmarks) {
+        tbodyBenchmarks.innerHTML = data.benchmarks.map(b => `
+          <tr>
+            <td><strong>${b.model}</strong></td>
+            <td>${b.pr_auc.toFixed(3)}</td>
+            <td>${b.f1.toFixed(3)}</td>
+            <td>${(b.pr_auc * 1.03).toFixed(3)}</td>
+            <td>${b.latency_ms} ms</td>
+          </tr>
+        `).join('');
+      }
 
-            nodes.forEach(n => n.classList.remove("active"));
-            node.classList.add("active");
-
-            // Deactivate all connection lines, activate lines related to this node
-            const lines = document.querySelectorAll(".tree-svg-line");
-            lines.forEach(l => l.classList.remove("active"));
-            
-            // Highlight connections out/in to this node
-            const connOut = document.getElementById(`line-${nodeId}-${getNextNode(nodeId)}`);
-            const connIn = document.getElementById(`line-${getPrevNode(nodeId)}-${nodeId}`);
-            if (connOut) connOut.classList.add("active");
-            if (connIn) connIn.classList.add("active");
-
-            if (data) {
-                document.getElementById("inspector-title").textContent = `INSPECTING NODE: ${data.title}`;
-                document.getElementById("inspector-content").innerHTML = `
-                    <div class="inspector-grid">
-                        <div class="inspector-col-left">
-                            <span class="inspector-label">TECHNOLOGY_STACK:</span>
-                            <span class="inspector-val">${data.tech}</span>
-                            <span class="inspector-label">FUNCTIONAL_SPEC:</span>
-                            <p>${data.details}</p>
-                        </div>
-                        <div>
-                            <span class="inspector-label">LIVE_EXECUTION_STREAM:</span>
-                            <div class="inspector-log-block monospace">${data.logs.replace(/\n/g, "<br>")}</div>
-                        </div>
-                    </div>
-                `;
-                inspector.classList.remove("hidden");
-            }
-        });
-    });
-
-    function getNextNode(node) {
-        const order = ["data", "model", "docker", "k8s", "prometheus", "grafana"];
-        const idx = order.indexOf(node);
-        return order[(idx + 1) % order.length];
+      if (data.feature_importances) {
+        featImportanceBars.innerHTML = Object.entries(data.feature_importances)
+          .slice(0, 7)
+          .map(([feat, weight]) => `
+            <div class="contrib-row">
+              <div class="contrib-header">
+                <span><code>${feat}</code></span>
+                <span><strong>${(weight * 100).toFixed(1)}%</strong></span>
+              </div>
+              <div class="contrib-bar-wrap">
+                <div class="contrib-bar-fill" style="width: ${weight * 100}%;"></div>
+              </div>
+            </div>
+          `).join('');
+      }
+    } catch (e) {
+      console.warn('Could not load benchmarks', e);
     }
+  }
 
-    function getPrevNode(node) {
-        const order = ["data", "model", "docker", "k8s", "prometheus", "grafana"];
-        const idx = order.indexOf(node);
-        return order[(idx - 1 + order.length) % order.length];
+  // -------------------------------------------------------------------------
+  // 7. System Health Status
+  // -------------------------------------------------------------------------
+  async function checkSystemHealth() {
+    try {
+      const res = await fetch('/system/status');
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('lbl-api-status').innerText = 'NOMINAL';
+        document.getElementById('lbl-db-status').innerText = data.components.database || 'CONNECTED';
+      }
+    } catch (e) {
+      document.getElementById('lbl-api-status').innerText = 'OFFLINE';
     }
+  }
 
-    if (closeInspectorBtn) {
-        closeInspectorBtn.addEventListener("click", () => {
-            inspector.classList.add("hidden");
-            nodes.forEach(n => n.classList.remove("active"));
-            const lines = document.querySelectorAll(".tree-svg-line");
-            lines.forEach(l => l.classList.remove("active"));
-        });
-    }
+  // Helper: Toast Notifications
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerText = message;
+    container.appendChild(toast);
 
-    // Telemetry Canvas Chart (Self-drawn Live simulation)
-    const canvas = document.getElementById("live-chart");
-    if (canvas) {
-        const ctx = canvas.getContext("2d");
-        let chartData = [];
-        const maxPoints = 30;
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
+  }
 
-        // Populate baseline data
-        for (let i = 0; i < maxPoints; i++) {
-            chartData.push({
-                requests: 120 + Math.random() * 40,
-                anomalies: Math.random() > 0.8 ? Math.floor(Math.random() * 8) : 0
-            });
-        }
+  function formatTime(isoStr) {
+    if (!isoStr) return '--:--';
+    const d = new Date(isoStr);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
 
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-        }
-
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
-
-        function drawChart() {
-            if (!ctx) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const width = canvas.width;
-            const height = canvas.height;
-            const padding = 30;
-            const plotWidth = width - padding * 2;
-            const plotHeight = height - padding * 2;
-
-            // Draw axis borders
-            ctx.strokeStyle = "#1a1a1a";
-            ctx.lineWidth = 1;
-            ctx.strokeRect(padding, padding, plotWidth, plotHeight);
-
-            // Draw gridlines
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.02)";
-            ctx.beginPath();
-            for (let i = 1; i < 5; i++) {
-                const y = padding + (plotHeight / 5) * i;
-                ctx.moveTo(padding, y);
-                ctx.lineTo(width - padding, y);
-            }
-            ctx.stroke();
-
-            const step = plotWidth / (maxPoints - 1);
-            
-            // Draw Requests (Normal metrics)
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            chartData.forEach((d, idx) => {
-                const x = padding + idx * step;
-                // Max scaling assumed 200
-                const y = padding + plotHeight - (d.requests / 200) * plotHeight;
-                if (idx === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-
-            // Draw Anomalies (Glowing red metrics)
-            ctx.strokeStyle = "var(--accent-red)";
-            ctx.shadowColor = "var(--accent-red)";
-            ctx.shadowBlur = 8;
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            
-            chartData.forEach((d, idx) => {
-                const x = padding + idx * step;
-                // Max scaling assumed 10 anomalies
-                const y = padding + plotHeight - (d.anomalies / 10) * plotHeight;
-                if (idx === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-            
-            // Reset shadows
-            ctx.shadowBlur = 0;
-
-            // Draw Axis Labels
-            ctx.fillStyle = "#555";
-            ctx.font = "10px 'Share Tech Mono'";
-            ctx.fillText("200 req/m", padding - 20, padding + 10);
-            ctx.fillText("0 req/m", padding - 20, height - padding);
-        }
-
-        // Push new data points dynamically to simulate live telemetry
-        function updateChartData() {
-            chartData.shift();
-            
-            // Random walk simulation
-            const lastReq = chartData[chartData.length - 1].requests;
-            let newReq = lastReq + (Math.random() - 0.5) * 20;
-            if (newReq < 80) newReq = 80;
-            if (newReq > 180) newReq = 180;
-
-            const hasAnomaly = Math.random() > 0.85;
-            const newAnom = hasAnomaly ? Math.floor(Math.random() * 6) + 1 : 0;
-
-            chartData.push({
-                requests: Math.round(newReq),
-                anomalies: newAnom
-            });
-
-            drawChart();
-        }
-
-        setInterval(updateChartData, 2000);
-        setTimeout(drawChart, 100);
-    }
+  // Initial Boot
+  loadPresets();
+  checkSystemHealth();
+  // Auto-run initial evaluate with default form values
+  evalForm.dispatchEvent(new Event('submit'));
 });

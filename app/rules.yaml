@@ -1,0 +1,92 @@
+# =============================================================================
+# Fraud Detection Platform — Declarative Rules and Ensemble Configuration
+# =============================================================================
+
+# Ensemble Weights for Hybrid Risk Aggregation (Sum to 1.0)
+ensemble_weights:
+  rule_weight: 0.25
+  supervised_weight: 0.35
+  anomaly_weight: 0.20
+  behavioral_weight: 0.12
+  network_weight: 0.08
+
+# Risk Level Classification Thresholds (0 - 100)
+risk_thresholds:
+  low: 30.0          # 0.0 - 29.9 -> ALLOW
+  medium: 60.0       # 30.0 - 59.9 -> STEP_UP (OTP / Biometric Challenge)
+  high: 80.0         # 60.0 - 79.9 -> MANUAL_REVIEW
+                     # 80.0 - 100.0 -> BLOCK / FRAUD ALERT
+
+# Declarative Fraud Rules
+rules:
+  RULE_IMPOSSIBLE_TRAVEL:
+    enabled: true
+    weight: 25.0
+    description: "Impossible travel speed detected between consecutive transactions (>850 km/h)"
+    condition: "is_impossible_travel == 1.0"
+
+  RULE_NEW_DEVICE_HIGH_AMOUNT:
+    enabled: true
+    weight: 20.0
+    description: "High value transaction from an unrecognized new device"
+    condition: "is_new_device == 1.0 and amount_to_avg_ratio >= 3.0"
+
+  RULE_HIGH_VELOCITY_5M:
+    enabled: true
+    weight: 20.0
+    description: "Abnormal transaction velocity (>5 transactions in 5 minutes)"
+    condition: "txn_count_5m >= 5.0"
+
+  RULE_AMOUNT_ZSCORE_EXCEEDED:
+    enabled: true
+    weight: 18.0
+    description: "Transaction amount exceeds 4 standard deviations from customer 30-day baseline"
+    condition: "amount_zscore >= 4.0"
+
+  RULE_NEW_BENEFICIARY_HIGH_TRANSFER:
+    enabled: true
+    weight: 20.0
+    description: "Large transfer to an unverified new beneficiary"
+    condition: "is_new_beneficiary == 1.0 and (is_type_transfer == 1.0 or is_type_cash_out == 1.0) and amount_to_avg_ratio >= 2.5"
+
+  RULE_RAPID_FAILED_ATTEMPTS:
+    enabled: true
+    weight: 15.0
+    description: "Multiple failed authentication attempts followed by high value transaction"
+    condition: "failed_attempts_last_24h >= 3.0 and amount >= 2000.0"
+
+  RULE_UNUSUAL_NIGHTTIME_ACTIVITY:
+    enabled: true
+    weight: 12.0
+    description: "High value transaction during suspicious nighttime hours (01:00 - 05:00 AM)"
+    condition: "is_nighttime == 1.0 and amount_to_avg_ratio >= 2.0"
+
+  RULE_SUSPICIOUS_DEVICE_SHARING:
+    enabled: true
+    weight: 18.0
+    description: "Device associated with multiple distinct customer accounts (>3 accounts)"
+    condition: "device_associated_accounts >= 3.0"
+
+  RULE_SUSPICIOUS_IP_VPN_CLUSTER:
+    enabled: true
+    weight: 14.0
+    description: "Transaction originated from known VPN/Proxy subnet with multiple account associations"
+    condition: "is_vpn_proxy == 1.0 and ip_associated_accounts >= 2.0"
+
+  RULE_HIGH_RISK_CRYPTO_OUTLIER:
+    enabled: true
+    weight: 15.0
+    description: "Unprecedented large transfer to high-risk cryptocurrency exchange"
+    condition: "is_cat_crypto == 1.0 and amount >= 25000.0"
+
+  RULE_EXTREME_AMOUNT_OUTLIER:
+    enabled: true
+    weight: 22.0
+    description: "Transaction amount is over 8x customer's historical average"
+    condition: "amount_to_avg_ratio >= 8.0"
+
+  RULE_DISTANCE_OUTLIER:
+    enabled: true
+    weight: 12.0
+    description: "Transaction location is over 1,000 km from registered home without travel history"
+    condition: "distance_from_home >= 1000.0"

@@ -1,0 +1,36 @@
+"""Data module for unified transaction schema, adapters, and synthetic generator."""
+from app.data.schema import (
+    Transaction,
+    CustomerProfile,
+    DeviceProfile,
+    NetworkProfile,
+    MerchantProfile,
+    BeneficiaryProfile,
+    TransactionType,
+    PaymentMethod,
+    MerchantCategory,
+    TransactionEvaluationRequest,
+    LegacyTransactionRequest,
+    TransactionEvaluationResponse,
+    AnalystFeedbackRequest,
+    RiskLevel,
+    DecisionType,
+)
+
+__all__ = [
+    "Transaction",
+    "CustomerProfile",
+    "DeviceProfile",
+    "NetworkProfile",
+    "MerchantProfile",
+    "BeneficiaryProfile",
+    "TransactionType",
+    "PaymentMethod",
+    "MerchantCategory",
+    "TransactionEvaluationRequest",
+    "LegacyTransactionRequest",
+    "TransactionEvaluationResponse",
+    "AnalystFeedbackRequest",
+    "RiskLevel",
+    "DecisionType",
+]
