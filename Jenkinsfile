@@ -72,7 +72,7 @@ pipeline {
 
                     . ${VENV_DIR}/bin/activate
                     pip install --quiet --upgrade pip
-                    pip install --quiet -r requirements.txt
+                    pip install --quiet -r requirements-dev.txt
 
                     echo "Running Bandit SAST scan on app/ directory..."
                     bandit \

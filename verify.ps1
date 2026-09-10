@@ -43,8 +43,11 @@ if ($recreateVenv) {
     Write-Host "Virtual environment is valid and ready. Skipping creation." -ForegroundColor Green
 }
 
-Write-Host "`n=== Phase 2: Installing / Verifying Dependencies ===" -ForegroundColor Cyan
-& ".\.venv\Scripts\python.exe" -m pip install --quiet -r requirements.txt
+if (Test-Path "requirements-dev.txt") {
+    & ".\.venv\Scripts\python.exe" -m pip install --quiet -r requirements-dev.txt
+} else {
+    & ".\.venv\Scripts\python.exe" -m pip install --quiet -r requirements.txt
+}
 Write-Host "Dependencies verified." -ForegroundColor Green
 
 Write-Host "`n=== Phase 3: Training Baseline Isolation Forest Model ===" -ForegroundColor Cyan
