@@ -554,6 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial Boot
   loadPresets();
   checkSystemHealth();
-  // Auto-run initial evaluate with default form values
-  evalForm.dispatchEvent(new Event('submit'));
+  loadAlerts();
+  loadRecentTransactions();
 });
