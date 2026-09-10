@@ -1028,6 +1028,19 @@ select:focus {
   animation: spinRefresh 0.75s linear infinite;
 }
 
+
+
+/* Refresh Button Icon & Animation */
+.icon-refresh {
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.3s ease;
+}
+
+.icon-refresh.spin {
+  animation: spinRefresh 0.75s linear infinite;
+}
+
 @keyframes spinRefresh {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -1040,4 +1053,47 @@ select:focus {
 @keyframes rowHighlight {
   0% { background-color: rgba(0, 240, 255, 0.18); }
   100% { background-color: transparent; }
+}
+
+/* Triage Action Badge Buttons */
+.btn-action-fraud {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-action-fraud:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-action-legit {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-action-legit:hover {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: #10b981;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }

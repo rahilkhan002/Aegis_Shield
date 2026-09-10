@@ -367,8 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <td><strong>${a.status}</strong></td>
             <td style="max-width: 280px; font-size: 0.75rem; color: var(--text-secondary);">${(a.reasons || []).slice(0, 2).join('; ') || 'Risk threshold exceeded'}</td>
             <td>
-              <button class="btn-text" onclick="window.confirmFraud('${a.transaction_id}')" style="color: #ef4444; font-weight: 600;">🚨 Fraud</button> |
-              <button class="btn-text" onclick="window.confirmLegit('${a.transaction_id}')" style="color: #10b981; font-weight: 600;">✓ Legit</button>
+              <div style="display: inline-flex; gap: 0.35rem;">
+                <button class="btn-action-fraud" onclick="window.confirmFraud('${a.transaction_id}')" title="Confirm Fraud">🚨 Flag Fraud</button>
+                <button class="btn-action-legit" onclick="window.confirmLegit('${a.transaction_id}')" title="Mark False Positive">✓ Approve</button>
+              </div>
             </td>
           </tr>
         `).join('');

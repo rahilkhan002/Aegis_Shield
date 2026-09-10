@@ -293,22 +293,22 @@ async def favicon():
 async def root_or_dashboard(request: Request):
     """Serves the redesigned analyst showcase console for browsers, or JSON health check."""
     if app_state.model is None:
-        try:
-            from app.model import get_or_train_artifacts
-            app_state.model, app_state.scaler = get_or_train_artifacts()
-        except Exception:
-            pass
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Model not loaded. Service is not ready.",
+        )
 
     accept = request.headers.get("accept", "")
-    index_file = STATIC_DIR / "index.html"
-    if index_file.exists() and ("application/json" not in accept or "text/html" in accept):
-        return FileResponse(str(index_file))
+    if "text/html" in accept:
+        index_file = STATIC_DIR / "index.html"
+        if index_file.exists():
+            return FileResponse(str(index_file))
 
     uptime_seconds = round(time.time() - app_state.startup_time, 2)
     return JSONResponse(
         content={
             "status": "healthy",
-            "model_loaded": app_state.model is not None,
+            "model_loaded": True,
             "model_version": app_state.model_version,
             "platform": "Real-Time Intelligent Fraud Detection & MLOps Platform",
             "uptime_seconds": uptime_seconds,
